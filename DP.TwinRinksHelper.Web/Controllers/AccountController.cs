@@ -1,0 +1,41 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+
+namespace DP.TwinRinksHelper.Web.Controllers
+{
+    [Route("[controller]/[action]")]
+    public class AccountController : Controller
+    {
+     
+        public AccountController()
+        {
+           
+        }
+
+        [HttpGet]
+        public IActionResult SignIn()
+        {
+            var redirectUrl = Url.Page("/Index");
+            return Challenge(
+                new AuthenticationProperties { RedirectUri = redirectUrl }   
+            );
+        }
+
+
+        [HttpGet]
+        public IActionResult SignOut()
+        {
+            var callbackUrl = Url.Page("/Account/SignedOut", pageHandler: null, values: null, protocol: Request.Scheme);
+            return SignOut(
+                new AuthenticationProperties { RedirectUri = callbackUrl }
+            );
+        }
+    }
+}

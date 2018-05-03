@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2015
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DP.TwinRinksHelper.Web", "DP.TwinRinksHelper.Web\DP.TwinRinksHelper.Web.csproj", "{F7C1AA2D-1BEC-4CFC-99C5-C41C331E390B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DP.TwinRinks.YH.ScheduleParser", "DP.TwinRinks.YH.ScheduleParser\DP.TwinRinks.YH.ScheduleParser.csproj", "{72015D60-B093-46C4-B050-1C6DE6324C75}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DP.TwinRinks.YH.ScheduleParser.Tests", "DP.TwinRinks.YH.ScheduleParser.Tests\DP.TwinRinks.YH.ScheduleParser.Tests.csproj", "{D3428D61-A00E-4C9A-9EF9-C47A4515F2A5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CollectionJson", "CollectionJson\CollectionJson.csproj", "{B9F7BC64-7924-4928-910D-2E9E03DC682F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F7C1AA2D-1BEC-4CFC-99C5-C41C331E390B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7C1AA2D-1BEC-4CFC-99C5-C41C331E390B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7C1AA2D-1BEC-4CFC-99C5-C41C331E390B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7C1AA2D-1BEC-4CFC-99C5-C41C331E390B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72015D60-B093-46C4-B050-1C6DE6324C75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72015D60-B093-46C4-B050-1C6DE6324C75}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72015D60-B093-46C4-B050-1C6DE6324C75}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72015D60-B093-46C4-B050-1C6DE6324C75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3428D61-A00E-4C9A-9EF9-C47A4515F2A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3428D61-A00E-4C9A-9EF9-C47A4515F2A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3428D61-A00E-4C9A-9EF9-C47A4515F2A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3428D61-A00E-4C9A-9EF9-C47A4515F2A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9F7BC64-7924-4928-910D-2E9E03DC682F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9F7BC64-7924-4928-910D-2E9E03DC682F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9F7BC64-7924-4928-910D-2E9E03DC682F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9F7BC64-7924-4928-910D-2E9E03DC682F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5B9C20B2-DC19-41A5-9519-B0E558432B0F}
+	EndGlobalSection
+EndGlobal
