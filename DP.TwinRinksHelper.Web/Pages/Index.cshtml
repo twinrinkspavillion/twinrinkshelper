@@ -1,6 +1,149 @@
-﻿@page
+﻿
+@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Twin Rinks Schedule Assistant";
+
+    ViewBag.Title = (Model.SelectedTeam ?? "Youth Hockey") + " Schedule";
+
+    var selectedTeam = Model.SelectedTeam == null ? "" : Model.SelectedTeam.Replace(" ", "_");
+
+    var icsUrl = System.Net.WebUtility.UrlEncode($"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}api/ICS?team={selectedTeam}");
+
+    var googleUrl = $"https://calendar.google.com/calendar/r?cid={icsUrl}";
 }
 
+@section Scripts
+    {
+    <script type="text/javascript">
+
+    function NavigateToTeamSnapExport()
+    {
+       window.location.href = "?handler=exportTeamSnap&team=@Model.SelectedTeam&dates=" + getSelectedDates();
+    }
+
+    function NavigateToICalExport()
+    {
+       window.location.href = "?handler=iCalFile&team=@Model.SelectedTeam&dates=" + getSelectedDates();
+    }
+
+    function getSelectedDates()
+    {
+        var selected = [];
+
+        $('input:checked').each(function() {
+            selected.push($(this).attr('value'));
+        });
+
+        return selected.join();
+    }
+    </script>
+
+}
+<div align="center"><h3>@(Model.SelectedTeam ?? "Youth Hockey") Schedule</h3></div>
+<form asp-action="Index" method="get">
+    <div class="form-actions no-color">
+        <div class="container">
+            @Html.DropDownListFor(m => m.SelectedTeam, Model.Teams, new { onchange = "this.form.submit();", @class = "no-print" })
+
+            @if (Model.Events != null)
+            {
+                <div style="width:200px; margin-top:10px; margin-bottom:10px" class="no-print"><input type="search" class="light-table-filter form-control" data-table="event-table" placeholder="Filter"></div>
+
+                <a class="no-print" href="javascript:NavigateToTeamSnapExport();"><i class="fas fa-table"></i> TeamSnap File </a>
+                <a class="no-print" href="javascript:NavigateToICalExport();" style="padding-left:10px"><i class="fas fa-calendar-alt"></i> ICal File</a>
+                <a class="no-print" target="_blank" href="@googleUrl" style="padding-left:10px"><i class="fas fa-calendar-alt"></i> Add to Google Calendar</a>
+
+                <table class="table table-hover event-table">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Event Type</th>
+                            <th>Location</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        @foreach (var e in Model.Events)
+                        {
+                            <tr>
+                                <td><input class="no-print" value="@e.EventDate.ToString("yyyy-MM-dd")" type="checkbox" id="chk-date-select" checked="checked" /></td>
+
+                                @if (e.EventType == TwinRinksEventType.Game)
+                                {
+                                    <td><b>@e.EventDate.ToString("ddd, MMM dd")</b><img class="no-print" src="~/images/gameday.png" height="24" width="24" /></td>
+                                }
+                                else
+                                {
+                                    <td>@e.EventDate.ToString("ddd, MMM dd")</td>
+                                }
+                                <td>@DateTime.Today.Add(e.EventStart).ToString("hh:mm tt")</td>
+                                @if (e.EventType == TwinRinksEventType.Game)
+                                {
+
+                                    <td> <span class="label label-default">@e.EventType</span> vs @e.AwayTeamName</td>
+
+                                }
+                                else
+                                {
+
+                                    @if (TwinRinksScheduleParserUtils.IsPowerSkatingEvent(e))
+                                    {
+
+                                        <td>
+                                            <span class="label label-primary">Power Skating</span> @e.EventType
+                                        </td>
+
+                                    }
+                                    else
+                                    {
+                                        <td>@e.EventType</td>
+
+                                    }
+
+                                }
+
+                                @if (e.EventType == TwinRinksEventType.Game)
+                                {
+                                    @if (e.Rink == TwinRinksRink.Away)
+                                    {
+                                        <td><span class="label label-danger">Away</span> @e.Location </td>
+                                    }
+                                    else
+                                    {
+
+                                        <td><span class="label label-success">Home</span> <font color="@e.Rink"> @e.Rink</font></td>
+                                    }
+                                }
+                                else
+                                {
+                                    <td><font color="@e.Rink"> @e.Rink</font></td>
+                                }
+                                @if (e.EventType == TwinRinksEventType.Practice)
+                                {
+                                    @if (e.HomeTeamName == e.AwayTeamName)
+                                    {
+                                        <td>@e.HomeTeamName</td>
+                                    }
+                                    else
+                                    {
+
+                                        <td>@e.HomeTeamName @e.AwayTeamName</td>
+                                    }
+                                }
+                                else
+                                {
+                                    <td></td>
+
+                                }
+                            </tr>
+                        }
+
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</form>

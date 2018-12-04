@@ -1,0 +1,96 @@
+﻿@page
+@model MobileSchedule
+@{
+
+    ViewBag.Title = (Model.SelectedTeam ?? "Youth Hockey") + " Schedule";
+}
+<div id="main" style="display:none">
+    <form asp-action="MobileSchedule" method="get">
+        <div data-role="header" data-position="fixed" data-theme="a">
+            <div>
+                @Html.DropDownListFor(m => m.SelectedTeam, Model.Teams, new { onchange = "this.form.submit();", data_mini = "true", data_inline = "true" })
+            </div>
+        </div><!-- /header -->
+        @if (Model.Events != null)
+        {
+        <div id="mainPage" data-role="page" data-title="@((Model.SelectedTeam ?? " Youth Hockey") + " Schedule" )">
+            <div class="ui-content" role="main">
+                <ul data-role="listview" data-theme="a" data-dividertheme="a" data-filter="true" data-filter-theme="a" data-filter-placeholder="Search events...">
+                    @foreach (var d in Model.Events.GroupBy(x => x.EventDate).Select(x => new { Date = x.Key, Events = x.ToList() }))
+                        {
+                    <li data-role="list-divider">@d.Date.ToString("ddd").ToUpper(), @d.Date.ToString("MMM d")</li>
+
+                    @foreach (var e in d.Events)
+                            {
+                    @if (e.EventType == TwinRinksEventType.Game)
+                                {
+                    <li>
+                        @if (e.Rink == TwinRinksRink.Away)
+                                        {
+                        <h3 style="overflow:visible; text-shadow:none"><span class="label label-danger">Away</span><span class="label label-default" style="overflow:auto">Game</span> vs @e.AwayTeamName</h3>
+                        <p><strong>@@ @e.Location</strong></p>
+                                        }
+                                        else
+                                        {
+                        <h3 style="overflow:visible; text-shadow:none"><span class="label label-success">Home</span><span class="label label-default">Game</span> vs @e.AwayTeamName</h3>
+                        <p><strong>@@ @e.Rink.ToString() Rink</strong></p>
+                                        }
+                        <p class="ui-li-aside" style="font-size:large; right:1em"><strong>@DateTime.Today.Add(e.EventStart).ToString("h:mm")</strong>@DateTime.Today.Add(e.EventStart).ToString("tt").ToUpper()</p>
+                    </li>
+                                }
+                                else
+                                {
+                    <li>
+                        <h3 style="overflow:visible; text-shadow:none"><span class="label label-primary">Practice</span> @(TwinRinksScheduleParserUtils.IsPowerSkatingEvent(e) ? "Power Skating" : "")</h3>
+                        <p><strong>@@ @e.Rink.ToString() Rink</strong></p>
+                        @if (e.HomeTeamName == e.AwayTeamName)
+                                        {
+                        <p>@e.HomeTeamName</p>
+
+                                        }
+                                        else
+                                        {
+                        <p>@e.HomeTeamName @e.AwayTeamName</p>
+                                        }
+                        <p class="ui-li-aside" style="font-size:large; right:1em"><strong>@DateTime.Today.Add(e.EventStart).ToString("h:mm")</strong>@DateTime.Today.Add(e.EventStart).ToString("tt").ToUpper()</p>
+
+                    </li>
+                                }
+                            }
+
+
+                    @if (d.Date.DayOfWeek == DayOfWeek.Sunday)
+                            {
+
+                    <li style="height:120px; border-color:white"></li>
+                            }
+                        }
+                </ul>
+
+            </div><!-- /content -->
+        </div><!-- /page -->
+        }
+    </form>
+</div>
+@section Scripts
+    {
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700">
+    <link rel="stylesheet" href="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+    <link rel="stylesheet" href="~/lib/add-to-homescreen/style/addtohomescreen.css" />
+    <script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <script src="~/lib/hide-address-bar/hide-address-bar.js"></script>
+    <script src="~/lib/add-to-homescreen/addtohomescreen.min.js"></script>
+
+    <script>
+        $(function () {
+            $("[data-role='navbar']").navbar();
+            $("[data-role='header'], [data-role='footer']").toolbar();
+            $("#main").show();
+
+            addToHomescreen({
+                skipFirstVisit: true,
+                maxDisplayCount: 1
+            });
+        });
+    </script>
+}
