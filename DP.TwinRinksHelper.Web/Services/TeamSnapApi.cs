@@ -1,11 +1,8 @@
 ﻿using CollectionJson;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
@@ -16,15 +13,12 @@ public class TeamSnapApi : IDisposable
     private HttpClient _httpClient;
     public string BaseAddress { get; set; } = "https://apiv3.teamsnap.com/v3/";
 
-    const string ActiveTeamsQueryTemplate = "teams/active?user_id={0}";
-
-    const string TeamEventQueryTemplate = "events/search?team_id={0}";
-
-    const string TeamOwnerQueryTemplate = "/members/owner?team_id={0}";
-
-    const string MeQuery = "/me";
-
-    const string FindTeamMemberIdByEmail = "member_email_addresses/search?email={0}&team_id={1}";
+    private const string ActiveTeamsQueryTemplate = "teams/active?user_id={0}";
+    private const string TeamByIdQueryTemplate = "teams/{0}";
+    private const string TeamEventQueryTemplate = "events/search?team_id={0}";
+    private const string TeamOwnerQueryTemplate = "/members/owner?team_id={0}";
+    private const string MeQuery = "/me";
+    private const string FindTeamMemberIdByEmailTemplate = "member_email_addresses/search?email={0}&team_id={1}";
     public TeamSnapApi(string bearerToken)
     {
         if (string.IsNullOrWhiteSpace(bearerToken))
@@ -43,59 +37,221 @@ public class TeamSnapApi : IDisposable
     {
 
         if (teamId <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(teamId));
+        }
 
-        var str = await _httpClient.GetStringAsync(string.Format(TeamOwnerQueryTemplate, teamId));
+        string str = await _httpClient.GetStringAsync(string.Format(TeamOwnerQueryTemplate, teamId));
 
-        var doc = JsonConvert.DeserializeObject<ReadDocument>(str);
+        ReadDocument doc = JsonConvert.DeserializeObject<ReadDocument>(str);
 
         return doc.Collection.Items.Select(x => long.Parse(x.Data.GetDataByName("id").Value.ToString())).First();
     }
     public async Task<IEnumerable<Team>> GetActiveTeamsForUser(int userId)
     {
         if (userId <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(userId));
+        }
 
-        var str = await _httpClient.GetStringAsync(string.Format(ActiveTeamsQueryTemplate, userId));
+        string str = await _httpClient.GetStringAsync(string.Format(ActiveTeamsQueryTemplate, userId));
 
-        var doc = JsonConvert.DeserializeObject<ReadDocument>(str);
+        ReadDocument doc = JsonConvert.DeserializeObject<ReadDocument>(str);
 
         return doc.UnpackTeams().ToList();
 
     }
+
+    public async Task<Team> GetTeamAsync(long teamId)
+    {
+        if (teamId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(teamId));
+        }
+
+        string str = await _httpClient.GetStringAsync(string.Format(TeamByIdQueryTemplate, teamId));
+
+        ReadDocument doc = JsonConvert.DeserializeObject<ReadDocument>(str);
+
+        return doc.UnpackTeams().FirstOrDefault();
+
+    }
+
+    public async Task CreateEvents(IEnumerable<CreateEventRequest> cers)
+    {
+        CreateEventRequest first = cers.First();
+
+        BulkCreateEventRequest req = new BulkCreateEventRequest
+        {
+            NotifyTeam = first.NotifyTeam,
+            NotifyTeamAsMemberId = await GetTeamOwner(first.TeamId),
+            TeamId = first.TeamId
+        };
+
+        List<BulkCreateEventRequest.BulkEventTemplate> templates = new List<BulkCreateEventRequest.BulkEventTemplate>();
+
+        foreach (CreateEventRequest cer in cers)
+        {
+            BulkCreateEventRequest.BulkEventTemplate t = new BulkCreateEventRequest.BulkEventTemplate();
+
+            templates.Add(t);
+
+            long locationId = await FindOrCreateLocationIdByName(cer.LocationName, cer.TeamId);
+
+            t.team_id = cer.TeamId;
+
+            t.location_id = locationId;
+
+            t.is_game = cer.IsGame;
+
+            if (cer.DurationMinutes > 0)
+            {
+                t.duration_in_minutes =  cer.DurationMinutes;
+            }
+
+            if (cer.ArriveEarlyMinutes > 0)
+            {
+                t.minutes_to_arrive_early = cer.ArriveEarlyMinutes;
+            }
+
+            if (cer.IsGame)
+            {
+                long opponenentId = await FindOrCreateOpponentIdByName(cer.OpponentName, cer.TeamId);
+
+                t.opponent_id = opponenentId;
+            }
+            else
+            {
+               t.name = cer.Name;
+            }
+
+            if (!string.IsNullOrWhiteSpace(cer.Label))
+            {
+                t.label = cer.Label;
+            }
+
+            if (!string.IsNullOrWhiteSpace(cer.Notes))
+            {
+                t.notes = cer.Notes;
+            }
+
+            if (!string.IsNullOrWhiteSpace(cer.LocationDetails))
+            {
+                t.additional_location_details = cer.LocationDetails;
+            }
+
+            if (cer.IsTimeTBD)
+            {
+                t.is_tbd = true;
+                t.start_date = cer.StartDate.Date;
+
+            }
+            else
+            {
+                t.start_date = ConvertToUtc( cer.StartDate);
+
+            }
+        }
+
+        req.Templates = templates.ToArray();
+
+        HttpResponseMessage resp = await _httpClient.PostAsJsonAsync("/events/bulk_create", req);
+
+        string str = await resp.Content.ReadAsStringAsync();
+
+        ReadDocument rDoc = JsonConvert.DeserializeObject<ReadDocument>(str);
+
+        if (!resp.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException(rDoc.Collection.Error.Message);
+        }
+    }
+
+    DateTime ConvertToUtc(DateTime startDate)
+    {
+        return System.TimeZoneInfo.ConvertTimeToUtc(startDate, TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time"));
+
+    }
+    private class BulkCreateEventRequest
+    {
+        [JsonProperty("templates")]
+        public BulkEventTemplate[] Templates { get; set; }
+
+        [JsonProperty("team_id")]
+        public long TeamId { get; set; }
+
+        [JsonProperty("notify_team_as_member_id")]
+        public long NotifyTeamAsMemberId { get; set; }
+
+        [JsonProperty("notify_team")]
+        public bool NotifyTeam { get; set; }
+
+        public class BulkEventTemplate
+        {
+            public long team_id { get; set; }
+
+            public long location_id { get; set; }
+
+            public bool is_game { get; set; }
+
+            public int duration_in_minutes { get; set; }
+
+            public int minutes_to_arrive_early { get; set; }
+
+            public long opponent_id { get; set; }
+
+            public string name { get; set; }
+
+            public string label { get; set; }
+
+            public string notes { get; set; }
+
+            public string additional_location_details { get; set; }
+            public bool is_tbd { get; set; }
+            public DateTime start_date { get; set; }
+
+        }
+    }
+
+
     public async Task<IEnumerable<Event>> GetEventsForTeam(long teamId)
     {
         if (teamId <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(teamId));
+        }
 
-        var str = await _httpClient.GetStringAsync(string.Format(TeamEventQueryTemplate, teamId));
+        string str = await _httpClient.GetStringAsync(string.Format(TeamEventQueryTemplate, teamId));
 
-        var doc = JsonConvert.DeserializeObject<ReadDocument>(str);
+        ReadDocument doc = JsonConvert.DeserializeObject<ReadDocument>(str);
 
         return doc.UnpackEvents().ToList();
     }
     public async Task CancelEvent(long eventId, bool notifyTeam = true)
     {
-        WriteDocument doc = new WriteDocument();
-
-        doc.Template = new Template();
+        WriteDocument doc = new WriteDocument
+        {
+            Template = new Template()
+        };
 
         doc.Template.Data.Add(new Data() { Name = "is_canceled", Value = true });
 
         doc.Template.Data.Add(new Data() { Name = "notify_team", Value = notifyTeam });
 
-        var resp = await _httpClient.PutAsJsonAsync($"/events/{eventId}", doc);
+        HttpResponseMessage resp = await _httpClient.PutAsJsonAsync($"/events/{eventId}", doc);
 
         resp.EnsureSuccessStatusCode();
     }
     public async Task<long> FindOrCreateLocationIdByName(string locationName, long teamId)
     {
         if (teamId <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(teamId));
+        }
 
-        var str = await _httpClient.GetStringAsync($"/locations/search?team_id={teamId}");
+        string str = await _httpClient.GetStringAsync($"/locations/search?team_id={teamId}");
 
-        var rdoc = JsonConvert.DeserializeObject<ReadDocument>(str);
+        ReadDocument rdoc = JsonConvert.DeserializeObject<ReadDocument>(str);
 
 
         var target = rdoc.Collection.Items
@@ -108,19 +264,20 @@ public class TeamSnapApi : IDisposable
         }
         else
         {
-            WriteDocument doc = new WriteDocument();
-
-            doc.Template = new Template();
+            WriteDocument doc = new WriteDocument
+            {
+                Template = new Template()
+            };
 
             doc.Template.Data.Add(new Data() { Name = "name", Value = locationName });
 
             doc.Template.Data.Add(new Data() { Name = "team_id", Value = teamId });
 
-            var resp = await _httpClient.PostAsJsonAsync("/locations", doc);
+            HttpResponseMessage resp = await _httpClient.PostAsJsonAsync("/locations", doc);
 
-            var str2 = await resp.Content.ReadAsStringAsync();
+            string str2 = await resp.Content.ReadAsStringAsync();
 
-            var rdoc2 = JsonConvert.DeserializeObject<ReadDocument>(str2);
+            ReadDocument rdoc2 = JsonConvert.DeserializeObject<ReadDocument>(str2);
 
             resp.EnsureSuccessStatusCode();
 
@@ -131,11 +288,13 @@ public class TeamSnapApi : IDisposable
     public async Task<long> FindOrCreateOpponentIdByName(string opponentName, long teamId)
     {
         if (teamId <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(teamId));
+        }
 
-        var str = await _httpClient.GetStringAsync($"/opponents/search?team_id={teamId}");
+        string str = await _httpClient.GetStringAsync($"/opponents/search?team_id={teamId}");
 
-        var rdoc = JsonConvert.DeserializeObject<ReadDocument>(str);
+        ReadDocument rdoc = JsonConvert.DeserializeObject<ReadDocument>(str);
 
         var target = rdoc.Collection.Items
             .Select(x => new { Id = long.Parse(x.Data.GetDataByName("id").Value.ToString()), Name = x.Data.GetDataByName("name").Value.ToString() })
@@ -147,19 +306,20 @@ public class TeamSnapApi : IDisposable
         }
         else
         {
-            WriteDocument doc = new WriteDocument();
-
-            doc.Template = new Template();
+            WriteDocument doc = new WriteDocument
+            {
+                Template = new Template()
+            };
 
             doc.Template.Data.Add(new Data() { Name = "name", Value = opponentName });
 
             doc.Template.Data.Add(new Data() { Name = "team_id", Value = teamId });
 
-            var resp = await _httpClient.PostAsJsonAsync("/opponents", doc);
+            HttpResponseMessage resp = await _httpClient.PostAsJsonAsync("/opponents", doc);
 
-            var str2 = await resp.Content.ReadAsStringAsync();
+            string str2 = await resp.Content.ReadAsStringAsync();
 
-            var rdoc2 = JsonConvert.DeserializeObject<ReadDocument>(str2);
+            ReadDocument rdoc2 = JsonConvert.DeserializeObject<ReadDocument>(str2);
 
             resp.EnsureSuccessStatusCode();
 
@@ -169,11 +329,12 @@ public class TeamSnapApi : IDisposable
     }
     public async Task<long> CreateEvent(CreateEventRequest cer)
     {
-        var locationId = await FindOrCreateLocationIdByName(cer.LocationName, cer.TeamId);
+        long locationId = await FindOrCreateLocationIdByName(cer.LocationName, cer.TeamId);
 
-        WriteDocument doc = new WriteDocument();
-
-        doc.Template = new Template();
+        WriteDocument doc = new WriteDocument
+        {
+            Template = new Template()
+        };
 
         if (cer.NotifyTeam)
         {
@@ -188,29 +349,40 @@ public class TeamSnapApi : IDisposable
         doc.Template.Data.Add(new Data() { Name = "is_game", Value = cer.IsGame });
 
         if (cer.DurationMinutes > 0)
+        {
             doc.Template.Data.Add(new Data() { Name = "duration_in_minutes", Value = cer.DurationMinutes });
+        }
 
         if (cer.ArriveEarlyMinutes > 0)
+        {
             doc.Template.Data.Add(new Data() { Name = "minutes_to_arrive_early", Value = cer.ArriveEarlyMinutes });
+        }
 
         if (cer.IsGame)
         {
-            var opponenentId = await FindOrCreateOpponentIdByName(cer.OpponentName, cer.TeamId);
+            long opponenentId = await FindOrCreateOpponentIdByName(cer.OpponentName, cer.TeamId);
 
             doc.Template.Data.Add(new Data() { Name = "opponent_id", Value = opponenentId });
         }
         else
+        {
             doc.Template.Data.Add(new Data() { Name = "name", Value = cer.Name });
+        }
 
         if (!string.IsNullOrWhiteSpace(cer.Label))
+        {
             doc.Template.Data.Add(new Data() { Name = "label", Value = cer.Label });
-
+        }
 
         if (!string.IsNullOrWhiteSpace(cer.Notes))
+        {
             doc.Template.Data.Add(new Data() { Name = "notes", Value = cer.Notes });
+        }
 
         if (!string.IsNullOrWhiteSpace(cer.LocationDetails))
+        {
             doc.Template.Data.Add(new Data() { Name = "additional_location_details", Value = cer.LocationDetails });
+        }
 
         if (cer.IsTimeTBD)
         {
@@ -219,24 +391,30 @@ public class TeamSnapApi : IDisposable
 
         }
         else
-            doc.Template.Data.Add(new Data() { Name = "start_date", Value = cer.StartDate.ToUniversalTime() });
+        {
+            doc.Template.Data.Add(new Data() { Name = "start_date", Value = ConvertToUtc(cer.StartDate) });
+        }
 
-        var resp = await _httpClient.PostAsJsonAsync("/events", doc);
+        HttpResponseMessage resp = await _httpClient.PostAsJsonAsync("/events", doc);
 
-        var str = await resp.Content.ReadAsStringAsync();
+        string str = await resp.Content.ReadAsStringAsync();
 
-        var rDoc = JsonConvert.DeserializeObject<ReadDocument>(str);
+        ReadDocument rDoc = JsonConvert.DeserializeObject<ReadDocument>(str);
 
         if (resp.IsSuccessStatusCode)
+        {
             return rDoc.UnpackEvents().First().Id;
+        }
         else
+        {
             throw new HttpRequestException(rDoc.Collection.Error.Message);
+        }
     }
     public async Task<User> GetMe()
     {
-        var str = await _httpClient.GetStringAsync(MeQuery);
+        string str = await _httpClient.GetStringAsync(MeQuery);
 
-        var doc = JsonConvert.DeserializeObject<ReadDocument>(str);
+        ReadDocument doc = JsonConvert.DeserializeObject<ReadDocument>(str);
 
         return doc.Collection.Items.Select(x => new User
         {
@@ -251,31 +429,37 @@ public class TeamSnapApi : IDisposable
     public async Task<long> CreateAndInviteTeamMember(CreateTeamMemberRequest req)
     {
 
-        var existingId = await FindTeamMemberIdByEmailAddress(req.TeamId, req.EmailAddress);
+        long? existingId = await FindTeamMemberIdByEmailAddress(req.TeamId, req.EmailAddress);
 
         if (existingId.HasValue)
+        {
             return existingId.Value;
+        }
 
-        WriteDocument doc = new WriteDocument();
-
-        doc.Template = new Template();
+        WriteDocument doc = new WriteDocument
+        {
+            Template = new Template()
+        };
 
         doc.Template.Data.Add(new Data() { Name = "first_name", Value = req.FirstName });
         doc.Template.Data.Add(new Data() { Name = "last_name", Value = req.LastName });
         doc.Template.Data.Add(new Data() { Name = "team_id", Value = req.TeamId });
 
         if (req.IsManager)
+        {
             doc.Template.Data.Add(new Data() { Name = "is_manager", Value = true });
+        }
 
         if (req.IsNonPlayer)
+        {
             doc.Template.Data.Add(new Data() { Name = "is_non_player", Value = true });
+        }
 
+        HttpResponseMessage resp = await _httpClient.PostAsJsonAsync("/members", doc);
 
-        var resp = await _httpClient.PostAsJsonAsync("/members", doc);
+        string str = await resp.Content.ReadAsStringAsync();
 
-        var str = await resp.Content.ReadAsStringAsync();
-
-        var rDoc = JsonConvert.DeserializeObject<ReadDocument>(str);
+        ReadDocument rDoc = JsonConvert.DeserializeObject<ReadDocument>(str);
 
 
         long member_id = 0;
@@ -288,9 +472,10 @@ public class TeamSnapApi : IDisposable
             if (!string.IsNullOrWhiteSpace(req.EmailAddress))
             {
 
-                WriteDocument eDoc = new WriteDocument();
-
-                eDoc.Template = new Template();
+                WriteDocument eDoc = new WriteDocument
+                {
+                    Template = new Template()
+                };
 
                 eDoc.Template.Data.Add(new Data() { Name = "member_id", Value = member_id });
                 eDoc.Template.Data.Add(new Data() { Name = "email", Value = req.EmailAddress });
@@ -298,44 +483,46 @@ public class TeamSnapApi : IDisposable
                 eDoc.Template.Data.Add(new Data() { Name = "is_hidden", Value = true });
 
 
-                var eResp = await _httpClient.PostAsJsonAsync("/member_email_addresses", eDoc);
+                HttpResponseMessage eResp = await _httpClient.PostAsJsonAsync("/member_email_addresses", eDoc);
 
-                var eStr = await resp.Content.ReadAsStringAsync();
+                string eStr = await resp.Content.ReadAsStringAsync();
 
-                var erDoc = JsonConvert.DeserializeObject<ReadDocument>(eStr);
+                ReadDocument erDoc = JsonConvert.DeserializeObject<ReadDocument>(eStr);
 
                 if (eResp.IsSuccessStatusCode)
                 {
-                    var emailId = erDoc.Collection.Items.Select(x => long.Parse(x.Data.GetDataByName("id").Value.ToString())).First();
+                    long emailId = erDoc.Collection.Items.Select(x => long.Parse(x.Data.GetDataByName("id").Value.ToString())).First();
 
-                    var teamOwnerId = await GetTeamOwner(req.TeamId);
+                    long teamOwnerId = await GetTeamOwner(req.TeamId);
 
                     var inviteCommand = new { team_id = req.TeamId, member_id, introduction = req.InvitationMessage, notify_as_member_id = teamOwnerId };
 
-                    var eEviteResp = await _httpClient.PostAsJsonAsync("teams/invite", inviteCommand);
+                    HttpResponseMessage eEviteResp = await _httpClient.PostAsJsonAsync("teams/invite", inviteCommand);
 
-                    var evrDoc = JsonConvert.DeserializeObject<ReadDocument>(await resp.Content.ReadAsStringAsync());
+                    ReadDocument evrDoc = JsonConvert.DeserializeObject<ReadDocument>(await resp.Content.ReadAsStringAsync());
 
                     eEviteResp.EnsureSuccessStatusCode();
 
                     return member_id;
                 }
                 else
+                {
                     throw new HttpRequestException(erDoc.Collection.Error.Message);
-
+                }
             }
             else
+            {
                 throw new HttpRequestException(rDoc.Collection.Error.Message);
-
+            }
         }
         else
+        {
             return member_id;
-
-
+        }
     }
     public async Task ChangeTeamOwner(CreateTeamMemberRequest req)
     {
-        var newOwnerMemberId = await FindTeamMemberIdByEmailAddress(req.TeamId, req.EmailAddress);
+        long? newOwnerMemberId = await FindTeamMemberIdByEmailAddress(req.TeamId, req.EmailAddress);
 
         if (newOwnerMemberId == null)
         {
@@ -347,22 +534,28 @@ public class TeamSnapApi : IDisposable
 
         var changeOwnerCommand = new { team_id = req.TeamId, member_id = newOwnerMemberId };
 
-        var resp = await _httpClient.PostAsJsonAsync("teams/change_owner", changeOwnerCommand);
+        HttpResponseMessage resp = await _httpClient.PostAsJsonAsync("teams/change_owner", changeOwnerCommand);
 
         if (!resp.IsSuccessStatusCode)
+        {
             throw new HttpRequestException(JsonConvert.DeserializeObject<ReadDocument>(await resp.Content.ReadAsStringAsync()).Collection.Error.Message);
+        }
     }
     public async Task<long?> FindTeamMemberIdByEmailAddress(long teamId, string emailAddress)
     {
         if (teamId <= 0)
+        {
             throw new ArgumentOutOfRangeException(nameof(teamId));
+        }
 
         if (string.IsNullOrWhiteSpace(emailAddress))
+        {
             throw new ArgumentException("must provide valid email address!", nameof(emailAddress));
+        }
 
-        var str = await _httpClient.GetStringAsync(string.Format(FindTeamMemberIdByEmail, emailAddress, teamId));
+        string str = await _httpClient.GetStringAsync(string.Format(FindTeamMemberIdByEmailTemplate, emailAddress, teamId));
 
-        var doc = JsonConvert.DeserializeObject<ReadDocument>(str);
+        ReadDocument doc = JsonConvert.DeserializeObject<ReadDocument>(str);
 
         if (doc.Collection.Items.Any())
         {
@@ -372,9 +565,10 @@ public class TeamSnapApi : IDisposable
     }
     public async Task<long> CreateTeam(CreateTeamRequest team)
     {
-        WriteDocument doc = new WriteDocument();
-
-        doc.Template = new Template();
+        WriteDocument doc = new WriteDocument
+        {
+            Template = new Template()
+        };
 
         doc.Template.Data.Add(new Data() { Name = "name", Value = team.Name });
         doc.Template.Data.Add(new Data() { Name = "sport_id", Value = team.SportId });
@@ -382,29 +576,33 @@ public class TeamSnapApi : IDisposable
         doc.Template.Data.Add(new Data() { Name = "time_zone", Value = team.IANATimeZone });
         doc.Template.Data.Add(new Data() { Name = "location_postal_code", Value = team.LocationPostalCode });
 
-        var resp = await _httpClient.PostAsJsonAsync("/teams", doc);
+        HttpResponseMessage resp = await _httpClient.PostAsJsonAsync("/teams", doc);
 
-        var str = await resp.Content.ReadAsStringAsync();
+        string str = await resp.Content.ReadAsStringAsync();
 
-        var rDoc = JsonConvert.DeserializeObject<ReadDocument>(str);
+        ReadDocument rDoc = JsonConvert.DeserializeObject<ReadDocument>(str);
 
         if (resp.IsSuccessStatusCode)
+        {
             return rDoc.UnpackTeams().First().Id;
+        }
         else
+        {
             throw new HttpRequestException(rDoc.Collection.Error.Message);
-
+        }
     }
     public async Task MakeTeamOwnerNonPlayer(long teamId)
     {
-        var ownerMemberId = await GetTeamOwner(teamId);
+        long ownerMemberId = await GetTeamOwner(teamId);
 
-        WriteDocument doc = new WriteDocument();
-
-        doc.Template = new Template();
+        WriteDocument doc = new WriteDocument
+        {
+            Template = new Template()
+        };
 
         doc.Template.Data.Add(new Data() { Name = "is_non_player", Value = true });
 
-        var resp = await _httpClient.PutAsJsonAsync($"/members/{ownerMemberId}", doc);
+        HttpResponseMessage resp = await _httpClient.PutAsJsonAsync($"/members/{ownerMemberId}", doc);
 
         resp.EnsureSuccessStatusCode();
     }
@@ -447,7 +645,7 @@ public class TeamSnapApi : IDisposable
     }
     public class CreateTeamRequest : Team
     {
-   
+
         public string LocationCountry { get; set; } = "United States";
         public string IANATimeZone { get; set; } = "America/Chicago";
         public string LocationPostalCode { get; set; } = "60089";
@@ -463,7 +661,9 @@ public class TeamSnapApi : IDisposable
     public void Dispose()
     {
         if (_httpClient != null)
+        {
             _httpClient.Dispose();
+        }
 
         _httpClient = null;
     }

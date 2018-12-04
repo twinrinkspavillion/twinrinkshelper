@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Linq;
-using Ical.Net.Serialization;
-using Ical.Net;
+﻿using Ical.Net;
 using Ical.Net.CalendarComponents;
 using Ical.Net.DataTypes;
+using Ical.Net.Serialization;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace DP.TwinRinks.YH.ScheduleParser
 {
@@ -30,7 +30,7 @@ namespace DP.TwinRinks.YH.ScheduleParser
 
             whichFields = new HashSet<TwinRinksEventField>();
 
-            if(!me.AwayTeamName.Equals(other.AwayTeamName, StringComparison.InvariantCultureIgnoreCase))
+            if (!me.AwayTeamName.Equals(other.AwayTeamName, StringComparison.InvariantCultureIgnoreCase))
             {
                 res = true;
 
@@ -105,25 +105,28 @@ namespace DP.TwinRinks.YH.ScheduleParser
         {
             return Sha1Hash(me.ToString());
         }
-        static string Sha1Hash(string input)
+
+        private static string Sha1Hash(string input)
         {
-            var hash = (new SHA1Managed()).ComputeHash(Encoding.ASCII.GetBytes(input));
+            byte[] hash = (new SHA1Managed()).ComputeHash(Encoding.ASCII.GetBytes(input));
             return string.Join("", hash.Select(b => b.ToString("x2")).ToArray());
         }
 
         public static TwinRinksEvent ToEvent(this TwinRinksParsedScheduleItem item)
         {
 
-            TwinRinksEvent tre = new TwinRinksEvent();
-            tre.AwayTeamName = item.Away;
-            tre.HomeTeamName = item.Home;
-            tre.Location = ParseLocation(item);
-            tre.Rink = ParseRink(item);
-            tre.EventType = ParseEventType(item);
-            tre.EventDescription = item.Description;
-            tre.EventDate = DateTime.Parse(item.Date);
-            tre.EventEnd = DateTime.Parse(item.End + "M").TimeOfDay;
-            tre.EventStart = DateTime.Parse(item.Start + "M").TimeOfDay;
+            TwinRinksEvent tre = new TwinRinksEvent
+            {
+                AwayTeamName = item.Away,
+                HomeTeamName = item.Home,
+                Location = ParseLocation(item),
+                Rink = ParseRink(item),
+                EventType = ParseEventType(item),
+                EventDescription = item.Description,
+                EventDate = DateTime.Parse(item.Date),
+                EventEnd = DateTime.Parse(item.End + "M").TimeOfDay,
+                EventStart = DateTime.Parse(item.Start + "M").TimeOfDay
+            };
 
             return tre;
 
@@ -136,31 +139,44 @@ namespace DP.TwinRinks.YH.ScheduleParser
             string allTeamsName = $"ALL {level.ToString().ToUpperInvariant()}S";
             string levelStr = level.ToString().ToUpperInvariant();
 
-            foreach (var e in me)
+            foreach (TwinRinksEvent e in me)
             {
 
                 if (e.EventType == TwinRinksEventType.Game)
                 {
                     if (e.HomeTeamName.Equals(teamName, StringComparison.InvariantCultureIgnoreCase))
+                    {
                         yield return e;
+                    }
                     else if (e.AwayTeamName.Equals(teamName, StringComparison.InvariantCultureIgnoreCase))
+                    {
                         yield return e;
+                    }
                 }
                 else // practice
                 {
-                    var isPowerSkate = e.IsPowerSkatingEvent();
+                    bool isPowerSkate = e.IsPowerSkatingEvent();
 
                     if (e.HomeTeamName.Equals(teamName, StringComparison.InvariantCultureIgnoreCase))
+                    {
                         yield return e;
+                    }
                     else if (e.AwayTeamName.Equals(teamName, StringComparison.InvariantCultureIgnoreCase))
+                    {
                         yield return e;
+                    }
                     else if (e.HomeTeamName.Equals(allTeamsName, StringComparison.InvariantCultureIgnoreCase))
+                    {
                         yield return e;
+                    }
                     else if (e.AwayTeamName.Equals(allTeamsName, StringComparison.InvariantCultureIgnoreCase))
+                    {
                         yield return e;
+                    }
                     else if (isPowerSkate && (e.HomeTeamName.ToUpperInvariant().Contains(levelStr) || e.AwayTeamName.ToUpperInvariant().Contains(levelStr)))
+                    {
                         yield return e;
-
+                    }
                 }
 
 
@@ -172,19 +188,21 @@ namespace DP.TwinRinks.YH.ScheduleParser
         {
             Dictionary<DateTime, List<TwinRinksEvent>> byDateIndex = new Dictionary<DateTime, List<TwinRinksEvent>>();
 
-            foreach (var evt in other)
+            foreach (TwinRinksEvent evt in other)
             {
                 if (!byDateIndex.TryGetValue(evt.EventDate, out List<TwinRinksEvent> lst))
+                {
                     lst = byDateIndex[evt.EventDate] = new List<TwinRinksEvent>();
+                }
 
                 lst.Add(evt);
             }
 
-            foreach (var evt in me)
+            foreach (TwinRinksEvent evt in me)
             {
                 if (byDateIndex.TryGetValue(evt.EventDate, out List<TwinRinksEvent> lst))
                 {
-                    foreach (var candidate in lst)
+                    foreach (TwinRinksEvent candidate in lst)
                     {
                         if (Math.Abs((candidate.EventStart - evt.EventStart).TotalHours) < minEventStartHoursDiff)
                         {
@@ -202,7 +220,7 @@ namespace DP.TwinRinks.YH.ScheduleParser
 
             if (!string.IsNullOrWhiteSpace(selectedTeam))
             {
-                var parts = selectedTeam.Trim().Split(' ');
+                string[] parts = selectedTeam.Trim().Split(' ');
 
                 if (parts.Length == 2)
                 {
@@ -225,21 +243,21 @@ namespace DP.TwinRinks.YH.ScheduleParser
         {
             dest.WriteLine("Date,Time,Name,Opponent Name,Opponent Contact Name,Opponent Contact Phone Number,Opponent Contact E-mail Address,Location Name,Location Address,Location URL,Location Details,Home or Away,Uniform,Duration (HH:MM),Arrival Time (Minutes),Extra Label,Notes");
 
-            foreach (var evt in me)
+            foreach (TwinRinksEvent evt in me)
             {
                 if (evt.EventType == TwinRinksEventType.Game)
                 {
-                    var homeOrAway = evt.Rink == TwinRinksRink.Away ? "Away" : "Home";
-                    var eventName = $"vs {evt.AwayTeamName}";
-                    var extraLabel = evt.Rink == TwinRinksRink.Away ? "" : evt.Rink.ToString() + " Rink";
+                    string homeOrAway = evt.Rink == TwinRinksRink.Away ? "Away" : "Home";
+                    string eventName = $"vs {evt.AwayTeamName}";
+                    string extraLabel = evt.Rink == TwinRinksRink.Away ? "" : evt.Rink.ToString() + " Rink";
 
                     dest.WriteLine($"{evt.EventDate.ToString("MM/dd/yyyy")},{evt.EventStart.ToTeamSnapTime()},{eventName},{evt.AwayTeamName},,,,{evt.Location},,,,{homeOrAway},,01:00,40,{extraLabel},");
                 }
                 else // practice
                 {
-                    var extraLabel = evt.Rink == TwinRinksRink.Away ? "" : evt.Rink.ToString() + " Rink";
+                    string extraLabel = evt.Rink == TwinRinksRink.Away ? "" : evt.Rink.ToString() + " Rink";
 
-                    var eventName = evt.IsPowerSkatingEvent() ? "Power Skating" : "Practice";
+                    string eventName = evt.IsPowerSkatingEvent() ? "Power Skating" : "Practice";
 
                     dest.WriteLine($"{evt.EventDate.ToString("MM/dd/yyyy")},{evt.EventStart.ToTeamSnapTime()},{eventName},,,,,{evt.Location},,,,,,01:00,20,{extraLabel},{evt.HomeTeamName} {evt.AwayTeamName}");
 
@@ -252,7 +270,7 @@ namespace DP.TwinRinks.YH.ScheduleParser
 
         public static IEnumerable<TwinRinksEvent> ParseTwinRinksEvents(this HtmlAgilityPack.HtmlDocument me)
         {
-            var rows = me.DocumentNode.SelectNodes("//td");
+            HtmlAgilityPack.HtmlNodeCollection rows = me.DocumentNode.SelectNodes("//td");
 
             int i = 0;
 
@@ -260,7 +278,7 @@ namespace DP.TwinRinks.YH.ScheduleParser
 
             List<TwinRinksParsedScheduleItem> items = new List<TwinRinksParsedScheduleItem>();
 
-            foreach (var r in rows)
+            foreach (HtmlAgilityPack.HtmlNode r in rows)
             {
                 switch (i)
                 {
@@ -349,44 +367,58 @@ namespace DP.TwinRinks.YH.ScheduleParser
         private static TwinRinksRink ParseRink(TwinRinksParsedScheduleItem item)
         {
             if (item.Rink.Equals("Blue"))
+            {
                 return TwinRinksRink.Blue;
+            }
             else if (item.Rink.Equals("Red"))
+            {
                 return TwinRinksRink.Red;
+            }
             else
+            {
                 return TwinRinksRink.Away;
+            }
         }
 
         private static string ParseLocation(TwinRinksParsedScheduleItem parsed)
         {
             if (parsed.Location.StartsWith("AT "))
+            {
                 return parsed.Location.Replace("AT ", "");
+            }
             else
+            {
                 return parsed.Location;
+            }
         }
 
         public static IReadOnlyDictionary<TwinRinksTeamLevel, IReadOnlyList<string>> GetTeamMonikers(this IEnumerable<TwinRinksEvent> events)
         {
             Dictionary<TwinRinksTeamLevel, IReadOnlyList<string>> result = new Dictionary<TwinRinksTeamLevel, IReadOnlyList<string>>();
 
-            var games = events.Where(x => x.EventType == TwinRinksEventType.Game);
-
             foreach (TwinRinksTeamLevel v in Enum.GetValues(typeof(TwinRinksTeamLevel)))
             {
                 HashSet<string> monikers = new HashSet<string>();
 
-                foreach (var g in games)
+                foreach (TwinRinksEvent e in events)
                 {
-                    var teamLevel = $"{v.ToString().ToUpperInvariant()} ";
-
-                    var teamName = g.HomeTeamName.ToUpperInvariant();
-
-                    if (teamName.StartsWith(teamLevel))
+                    if (e.EventType == TwinRinksEventType.Game)
                     {
-                        var moniker = teamName.Replace(teamLevel, "");
-
-                        if (!string.IsNullOrWhiteSpace(moniker))
+                        if (TryParseTeamMonikers(v, e.HomeTeamName, out string teamNameResult))
                         {
-                            monikers.Add(moniker);
+                            monikers.Add(teamNameResult);
+                        }
+                    }
+                    else if (e.EventType == TwinRinksEventType.Practice)
+                    {
+                        if (TryParseTeamMonikers(v, e.HomeTeamName, out string teamNameResult))
+                        {
+                            monikers.Add(teamNameResult);
+                        }
+
+                        if (TryParseTeamMonikers(v, e.AwayTeamName, out string teamNameResult2))
+                        {
+                            monikers.Add(teamNameResult2);
                         }
                     }
                 }
@@ -397,20 +429,41 @@ namespace DP.TwinRinks.YH.ScheduleParser
             return result;
         }
 
+        private static bool TryParseTeamMonikers(TwinRinksTeamLevel v, string fullTeamDescription, out string teamNameResult)
+        {
+            string teamName = fullTeamDescription.ToUpperInvariant();
+
+            string teamLevel = $"{v.ToString().ToUpperInvariant()} ";
+
+            if (teamName.StartsWith(teamLevel))
+            {
+                string moniker = teamName.Replace(teamLevel, "");
+
+                if (!string.IsNullOrWhiteSpace(moniker) && !moniker.Equals("POWER", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    teamNameResult = moniker;
+                    return true;
+                }
+            }
+
+            teamNameResult = null;
+
+            return false;
+        }
 
         public static string WriteICalFileString(this IEnumerable<TwinRinksEvent> me, string title)
         {
-            var calendar = new Calendar();
+            Calendar calendar = new Calendar();
 
             calendar.AddProperty("X-WR-CALNAME", title);
 
 
-            foreach (var e in me)
+            foreach (TwinRinksEvent e in me)
             {
                 calendar.Events.Add(BuildCalendarEvent(e));
             }
 
-            var serializer = new CalendarSerializer();
+            CalendarSerializer serializer = new CalendarSerializer();
 
             return serializer.SerializeToString(calendar);
 
@@ -418,11 +471,12 @@ namespace DP.TwinRinks.YH.ScheduleParser
 
         private static CalendarEvent BuildCalendarEvent(TwinRinksEvent evt)
         {
-            var vEvent = new CalendarEvent();
-
-            vEvent.Location = $"Twin Rinks - {evt.Rink} Rink";
-            vEvent.Created = new CalDateTime(DateTime.Now);
-            vEvent.Class = "PUBLIC";
+            CalendarEvent vEvent = new CalendarEvent
+            {
+                Location = $"Twin Rinks - {evt.Rink} Rink",
+                Created = new CalDateTime(DateTime.Now),
+                Class = "PUBLIC"
+            };
 
             if (evt.EventType == TwinRinksEventType.Game)
             {
@@ -440,15 +494,18 @@ namespace DP.TwinRinks.YH.ScheduleParser
             else
             {
                 if (evt.IsPowerSkatingEvent())
+                {
                     vEvent.Summary = $"Power Skating@{evt.Rink} Rink";
-
+                }
                 else
+                {
                     vEvent.Summary = $"Practice@{evt.Rink} Rink";
+                }
             }
 
-            var startDate = evt.EventDate.Add(evt.EventStart);
+            DateTime startDate = evt.EventDate.Add(evt.EventStart);
 
-            var endDate = evt.EventDate.Add(evt.EventEnd);
+            DateTime endDate = evt.EventDate.Add(evt.EventEnd);
 
             vEvent.Start = new CalDateTime(startDate, "America/Chicago");
 
@@ -464,5 +521,58 @@ namespace DP.TwinRinks.YH.ScheduleParser
 
         public TwinRinksEvent FirstEvent { get; set; }
         public TwinRinksEvent SecondEvent { get; set; }
+    }
+
+    public class TwinRinksEventKey : IEquatable<TwinRinksEventKey>
+    {
+        public TwinRinksEventKey(TwinRinksEvent evt)
+        {
+            if (evt == null)
+            {
+                throw new ArgumentNullException(nameof(evt));
+            }
+
+            EventStartDate = evt.EventDate + evt.EventStart;
+            EventType = evt.EventType;
+            Location = evt.Location;
+
+        }
+        public TwinRinksEventKey(DateTime eventStartDate, TwinRinksEventType eventType, string location)
+        {
+            if (string.IsNullOrWhiteSpace(location))
+            {
+                throw new ArgumentException("message", nameof(location));
+            }
+
+            EventStartDate = eventStartDate;
+            EventType = eventType;
+            Location = location;
+        }
+
+        public DateTime EventStartDate { get; }
+        public TwinRinksEventType EventType { get; }
+        public string Location { get; }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as TwinRinksEventKey);
+        }
+
+        public bool Equals(TwinRinksEventKey other)
+        {
+            return other != null &&
+                   EventStartDate == other.EventStartDate &&
+                   EventType == other.EventType &&
+                   Location == other.Location;
+        }
+
+        public override int GetHashCode()
+        {
+            int hashCode = -2103952962;
+            hashCode = hashCode * -1521134295 + EventStartDate.GetHashCode();
+            hashCode = hashCode * -1521134295 + EventType.GetHashCode();
+            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Location);
+            return hashCode;
+        }
     }
 }

@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - DP.TwinRinksHelper.Web</title>
+    <title>@ViewData["Title"] - TwinRinks Schedule Assistant</title>
 
     <environment include="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
@@ -17,7 +17,8 @@
     </environment>
 </head>
 <body>
-    <nav class="navbar navbar-inverse navbar-fixed-top">
+    <nav class="navbar navbar-default navbar-fixed-top">
+
         <div class="container">
             <div class="navbar-header">
                 <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -26,13 +27,29 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a asp-page="/Index" class="navbar-brand">DP.TwinRinksHelper.Web</a>
+                <a asp-page="/Index" class="navbar-brand">
+                    <img src="~/images/sharkslogo-small.gif" width="80" height="41" style="  display: inline-block;margin-top:-10px" />
+                    <span style="font-family:'Roboto','Helvetica Neue',Helvetica,Arial,sans-serif">Schedule Assistant</span>
+                </a>
             </div>
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
-                    <li><a asp-page="/Index">Home</a></li>
-                    <li><a asp-page="/About">About</a></li>
-                    <li><a asp-page="/Contact">Contact</a></li>
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <li class="nav-item dropdown">
+                            <div lass="dropdown">
+                                <a class="btn nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="margin-top:10px">
+                                    <img src="~/images/teamsnap-badge.svg" width="20" height="20" style="  display: inline-block;" /> TeamSnap Integration
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                                    <li class="dropdown-header">Tools</li>
+                                    <li>
+                                        <a href="~/CompareSchedule" title="Compare schedule in a given TeamSnap team to TwinRinks official schedule">Reconcile Schedule</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                    }
                 </ul>
                 @await Html.PartialAsync("_LoginPartial")
             </div>
@@ -42,7 +59,7 @@
         @RenderBody()
         <hr />
         <footer>
-            <p>&copy; 2017 - DP.TwinRinksHelper.Web</p>
+            <p>&copy; @DateTime.Today.Year TwinRinks</p>
         </footer>
     </div>
 

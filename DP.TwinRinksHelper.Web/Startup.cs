@@ -26,6 +26,7 @@ namespace DP.TwinRinksHelper.Web
         public void ConfigureServices(IServiceCollection services)
         { 
             services.AddTeamSnapOauth(Configuration);
+            services.AddTwinRinksScheduleParser();
             services.AddMvc();         
         }
 
