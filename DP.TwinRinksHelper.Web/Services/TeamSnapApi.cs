@@ -119,6 +119,13 @@ public class TeamSnapApi : IDisposable
                 long opponenentId = await FindOrCreateOpponentIdByName(cer.OpponentName, cer.TeamId);
 
                 t.opponent_id = opponenentId;
+
+                if(!string.IsNullOrWhiteSpace(cer.GameType))
+                {
+                    t.game_type = cer.GameType;
+
+                    t.game_type_code = cer.GameType == "Home" ? 1 : 2;
+                }
             }
             else
             {
@@ -209,6 +216,9 @@ public class TeamSnapApi : IDisposable
             public string additional_location_details { get; set; }
             public bool is_tbd { get; set; }
             public DateTime start_date { get; set; }
+            public string game_type { get; set; }
+            public int game_type_code { get; set; }
+                  
 
         }
     }
@@ -363,6 +373,12 @@ public class TeamSnapApi : IDisposable
             long opponenentId = await FindOrCreateOpponentIdByName(cer.OpponentName, cer.TeamId);
 
             doc.Template.Data.Add(new Data() { Name = "opponent_id", Value = opponenentId });
+
+            if (!string.IsNullOrWhiteSpace(cer.GameType))
+            {
+                doc.Template.Data.Add(new Data() { Name = "game_type", Value = cer.GameType });
+                doc.Template.Data.Add(new Data() { Name = "game_type_code", Value = cer.GameType == "Home" ? 1 : 2 });
+            }
         }
         else
         {
@@ -636,6 +652,7 @@ public class TeamSnapApi : IDisposable
         public bool NotifyTeam { get; set; } = true;
         public string Label { get; set; }
         public string LocationDetails { get; set; }
+        public string GameType { get; internal set; }
     }
     public class Team
     {

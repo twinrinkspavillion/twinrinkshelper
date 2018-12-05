@@ -135,6 +135,8 @@ public static class TeamSnapExtentions
             res.OpponentName = evt.AwayTeamName;
 
             res.ArriveEarlyMinutes = 60;
+
+            res.GameType = evt.Rink == TwinRinksRink.Away ? "Away" : "Home";
         }
         else
         {
