@@ -38,6 +38,7 @@ namespace DP.TwinRinksHelper.Web.Pages
             await tsApi.CreateEvents(createReqs);
 
             Result.CountCreated = createReqs.Count();
+
             Result.TeamName = (await tsApi.GetTeamAsync(SelectedTeamSnapTeamId.Value)).Name;
         
             return new PageResult();
@@ -48,7 +49,6 @@ namespace DP.TwinRinksHelper.Web.Pages
             HashSet<TwinRinksEventKey> res = new HashSet<TwinRinksEventKey>();
 
             string[] events = selectedEvents.Split('|');
-
 
             foreach (string e in events)
             {
