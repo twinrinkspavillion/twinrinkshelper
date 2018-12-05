@@ -13,13 +13,11 @@ public class ScheduleComparer
     private readonly string twinRinksTeam;
 
     public CompareOptions Options { get; }
-
     public class CompareOptions
     {
 
 
     }
-
     public ScheduleComparer(TeamSnapApi tsApi, TwinRinksScheduleParserService trApi, long teamSnapTeamId, string twinRinksTeam, CompareOptions options = null)
     {
         if (string.IsNullOrWhiteSpace(twinRinksTeam))
@@ -35,7 +33,6 @@ public class ScheduleComparer
 
         Options = options ?? new CompareOptions();
     }
-
     public Task<IEnumerable<CompareResult>> RunCompareAsync()
     {
         return Task.Run<IEnumerable<CompareResult>>(async () =>
@@ -47,8 +44,6 @@ public class ScheduleComparer
             return Compare(tsEvents, trEvents);
         });
     }
-
-
     public static IEnumerable<CompareResult> Compare(IEnumerable<TeamSnapApi.Event> tsEvents, IEnumerable<TwinRinksEvent> trEvents)
     {
         List<CompareResult> res = new List<CompareResult>();
@@ -107,7 +102,7 @@ public class ScheduleComparer
             }
         }
 
-        foreach (TeamSnapApi.Event tsEvent in tsEvents.Where(x => !x.IsCancelled))
+        foreach (TeamSnapApi.Event tsEvent in tsEvents.Where(x => !x.IsCancelled && x.StartDate > DateTime.Today.AddDays(-1)))
         {
             if (!seenTsEvents.Contains(tsEvent.Id))
             {
@@ -128,7 +123,6 @@ public class ScheduleComparer
 
         return res;
     }
-
     public static DateTime ToCSTTime(DateTime d)
     {
         DateTime clientDateTime = d;
@@ -137,7 +131,6 @@ public class ScheduleComparer
 
         return centralDateTime;
     }
-
     public enum DifferenceType
     {
         NotInTeamSnap,
