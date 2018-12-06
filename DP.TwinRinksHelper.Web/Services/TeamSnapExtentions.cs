@@ -108,7 +108,11 @@ public static class TeamSnapExtentions
         return int.Parse(me.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier).Value);
 
     }
+    public static string GetTeamSnapUserEmail(this ClaimsPrincipal me)
+    {
+        return me.FindFirst(System.Security.Claims.ClaimTypes.Name).Value;
 
+    }
 
     public static TeamSnapApi.CreateEventRequest ToCreateTeamSnapEventRequest(this TwinRinksEvent evt, long teamId, bool notifyTeam = true)
     {

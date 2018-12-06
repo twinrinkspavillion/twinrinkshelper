@@ -1,0 +1,58 @@
+﻿@page
+@model DP.TwinRinksHelper.Web.Pages.ScheduleSyncSpec.DeleteModel
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<h3>Delete</h3>
+
+<h4>Are you sure you want to delete this?</h4>
+<div>
+    <hr />
+    <dl class="dl-horizontal">
+
+        <dt>
+            @Html.DisplayNameFor(model => model.ScheduleSyncSpec.TeamSnapTeamName)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.ScheduleSyncSpec.TeamSnapTeamName)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.ScheduleSyncSpec.TwinRinkTeamName)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.ScheduleSyncSpec.TwinRinkTeamName)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.ScheduleSyncSpec.LastChecked)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.ScheduleSyncSpec.LastChecked)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.ScheduleSyncSpec.Expires)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.ScheduleSyncSpec.Expires)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.ScheduleSyncSpec.CreatedDate)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.ScheduleSyncSpec.CreatedDate)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.ScheduleSyncSpec.LastUpdated)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.ScheduleSyncSpec.LastUpdated)
+        </dd>
+    </dl>
+
+    <form method="post">
+        <input type="hidden" asp-for="ScheduleSyncSpec.ID" />
+        <input type="submit" value="Delete" class="btn btn-default" /> |
+        <a asp-page="./Index">Back to List</a>
+    </form>
+</div>

@@ -1,0 +1,66 @@
+﻿@page
+@model DP.TwinRinksHelper.Web.Pages.ScheduleSyncSpec.IndexModel
+
+@{
+    ViewData["Title"] = "Index";
+}
+<h3>Scheduled Schedule Checks</h3>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.ScheduleSyncSpec[0].Recipients)
+            </th>           
+            <th>
+                @Html.DisplayNameFor(model => model.ScheduleSyncSpec[0].TeamSnapTeamName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ScheduleSyncSpec[0].TwinRinkTeamName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ScheduleSyncSpec[0].LastChecked)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ScheduleSyncSpec[0].Expires)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ScheduleSyncSpec[0].CreatedDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ScheduleSyncSpec[0].LastUpdated)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model.ScheduleSyncSpec)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Recipients)
+                </td>    
+                <td>
+                    @Html.DisplayFor(modelItem => item.TeamSnapTeamName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.TwinRinkTeamName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.LastChecked)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Expires)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CreatedDate)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.LastUpdated)
+                </td>
+                <td>
+                    <a asp-page="./Delete" asp-route-id="@item.ID">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

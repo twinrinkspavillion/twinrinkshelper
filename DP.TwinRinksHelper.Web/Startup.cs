@@ -1,13 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using DP.TwinRinksHelper.Web.Models;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -28,7 +22,8 @@ namespace DP.TwinRinksHelper.Web
             services.AddMemoryCache();
             services.AddTeamSnapOauth(Configuration);
             services.AddTwinRinksScheduleParser();
-            services.AddMvc();         
+            services.AddMvc();
+            services.AddDbContext<TwinRinksHelperContext>(options =>options.UseSqlite("Data Source=.\\TwinRinksHelper.db"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

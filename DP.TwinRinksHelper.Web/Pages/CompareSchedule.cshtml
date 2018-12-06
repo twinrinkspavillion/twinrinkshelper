@@ -24,25 +24,35 @@
 
 @if (Model.CompareResults != null)
 {
-    <div class="panel panel-warning" style="margin:10px">
-        <div class="panel-heading">
-            <h3 class="panel-title">Result @Model.CompareResults.Count()</h3>
-        </div>
-        <div class="panel-body">
-            @Html.Raw(Html.ToHtmlTable(@Model.CompareResults, "results", selectorGenerator: (r) => r.Type == ScheduleComparer.DifferenceType.NotInTeamSnap ? $"{r.TR_EventTime.GetValueOrDefault().Ticks}_{r.TR_EventType}_{r.TR_Location}" : ""))
-            <form method="post" action="~/CreateEvents">
-                <input id="selectedEvents" name="SelectedEvents" type="hidden" value="test">
-                <input name="SelectedTeamSnapTeamId" type="hidden" value="@Model.SelectedTeamSnapTeamId" />
-                <input name="SelectedTwinRinksTeam" type="hidden" value="@Model.SelectedTwinRinksTeam" />
-                <div class="alert alert-dismissible alert-danger" id="alert" style="display:none">
-                    <button type="button" class="close" data-dismiss="alert">&times;</button>
-                    <strong>Oh snap!</strong> Must select at least one event to create!
-                </div>
-                <button type="submit" class="btn btn-primary" onclick="return postCreateEvents();">Create Events</button>
 
-            </form>
+    @if (Model.CompareResults.Any())
+    {
+        <div class="panel panel-warning" style="margin:10px">
+            <div class="panel-heading">
+                <h3 class="panel-title">Result @Model.CompareResults.Count()</h3>
+            </div>
+            <div class="panel-body">
+                @Html.Raw(Html.ToHtmlTable(@Model.CompareResults, "results", selectorGenerator: (r) => r.Type == ScheduleComparer.DifferenceType.NotInTeamSnap ? $"{r.TR_EventTime.GetValueOrDefault().Ticks}_{r.TR_EventType}_{r.TR_Location}" : ""))
+                <form method="post" action="~/CreateEvents">
+                    <input id="selectedEvents" name="SelectedEvents" type="hidden" value="test">
+                    <input name="SelectedTeamSnapTeamId" type="hidden" value="@Model.SelectedTeamSnapTeamId" />
+                    <input name="SelectedTwinRinksTeam" type="hidden" value="@Model.SelectedTwinRinksTeam" />
+                    <div class="alert alert-dismissible alert-danger" id="alert" style="display:none">
+                        <button type="button" class="close" data-dismiss="alert">&times;</button>
+                        <strong>Oh snap!</strong> Must select at least one event to create!
+                    </div>
+                    <button type="submit" class="btn btn-primary" onclick="return postCreateEvents();">Create Events</button>
+                </form>
+            </div>
         </div>
-    </div>
+    }
+    else
+    {
+        <div class="alert alert-dismissible alert-success" id="alert">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            <strong>No differences found!</strong>
+        </div>
+    }
 }
 
 @section Scripts
