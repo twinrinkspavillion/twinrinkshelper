@@ -106,7 +106,7 @@ public class TeamSnapApi : IDisposable
 
             if (cer.DurationMinutes > 0)
             {
-                t.duration_in_minutes =  cer.DurationMinutes;
+                t.duration_in_minutes = cer.DurationMinutes;
             }
 
             if (cer.ArriveEarlyMinutes > 0)
@@ -120,7 +120,7 @@ public class TeamSnapApi : IDisposable
 
                 t.opponent_id = opponenentId;
 
-                if(!string.IsNullOrWhiteSpace(cer.GameType))
+                if (!string.IsNullOrWhiteSpace(cer.GameType))
                 {
                     t.game_type = cer.GameType;
 
@@ -129,7 +129,7 @@ public class TeamSnapApi : IDisposable
             }
             else
             {
-               t.name = cer.Name;
+                t.name = cer.Name;
             }
 
             if (!string.IsNullOrWhiteSpace(cer.Label))
@@ -155,7 +155,7 @@ public class TeamSnapApi : IDisposable
             }
             else
             {
-                t.start_date = ConvertToUtc( cer.StartDate);
+                t.start_date = ConvertToUtc(cer.StartDate);
 
             }
         }
@@ -174,7 +174,7 @@ public class TeamSnapApi : IDisposable
         }
     }
 
-    DateTime ConvertToUtc(DateTime startDate)
+    private DateTime ConvertToUtc(DateTime startDate)
     {
         return System.TimeZoneInfo.ConvertTimeToUtc(startDate, TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time"));
 
@@ -218,7 +218,7 @@ public class TeamSnapApi : IDisposable
             public DateTime start_date { get; set; }
             public string game_type { get; set; }
             public int game_type_code { get; set; }
-                  
+
 
         }
     }
@@ -690,32 +690,44 @@ public static class TeamSnapApiExtentions
 {
     public static IEnumerable<TeamSnapApi.Event> UnpackEvents(this ReadDocument doc)
     {
-        return doc.Collection.Items.Select(x => new TeamSnapApi.Event
+        return doc.Collection.Items.Select(x =>
         {
-            Id = long.Parse(x.Data.GetDataByName("id").Value.ToString()),
 
-            TeamId = long.Parse(x.Data.GetDataByName("team_id").Value.ToString()),
+            TeamSnapApi.Event r = new TeamSnapApi.Event
+            {
+                Id = long.Parse(x.Data.GetDataByName("id").Value.ToString()),
 
-            Name = x.Data.GetDataByName("name").Value.ToString(),
+                TeamId = long.Parse(x.Data.GetDataByName("team_id").Value.ToString()),
 
-            IsTimeTBD = bool.Parse(x.Data.GetDataByName("is_tbd").Value.ToString()),
+                Name = x.Data.GetDataByName("name").Value.ToString(),
 
-            StartDate = x.Data.GetDataByName("start_date").Value.ToObject<DateTime>(),
+                IsTimeTBD = bool.Parse(x.Data.GetDataByName("is_tbd").Value.ToString()),
 
-            IsCancelled = bool.Parse(x.Data.GetDataByName("is_canceled").Value.ToString()),
+                StartDate = x.Data.GetDataByName("start_date").Value.ToObject<DateTime>(),
 
-            IsGame = bool.Parse(x.Data.GetDataByName("is_game").Value.ToString()),
+                IsCancelled = bool.Parse(x.Data.GetDataByName("is_canceled").Value.ToString()),
 
-            LocationName = x.Data.GetDataByName("location_name").Value.ToString(),
+                IsGame = bool.Parse(x.Data.GetDataByName("is_game").Value.ToString()),
 
-            OpponentName = x.Data.GetDataByName("opponent_name").Value.ToString(),
+                LocationName = x.Data.GetDataByName("location_name").Value.ToString(),
 
-            Notes = x.Data.GetDataByName("notes").Value.ToString(),
+                OpponentName = x.Data.GetDataByName("opponent_name").Value.ToString(),
 
-            DurationMinutes = int.Parse(x.Data.GetDataByName("duration_in_minutes").Value.ToString()),
+                Notes = x.Data.GetDataByName("notes").Value.ToString()
 
-            ArriveEarlyMinutes = int.Parse(x.Data.GetDataByName("minutes_to_arrive_early").Value.ToString())
 
+            };
+
+            int.TryParse(x.Data.GetDataByName("duration_in_minutes").Value.ToString(), out int duration);
+
+            r.DurationMinutes = duration;
+
+
+            int.TryParse(x.Data.GetDataByName("minutes_to_arrive_early").Value.ToString(), out int arriveEarlyMin);
+
+            r.ArriveEarlyMinutes = arriveEarlyMin;
+
+            return r;
         });
     }
     public static IEnumerable<TeamSnapApi.Team> UnpackTeams(this ReadDocument doc)
