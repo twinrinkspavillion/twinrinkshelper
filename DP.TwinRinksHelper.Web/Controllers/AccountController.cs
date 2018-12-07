@@ -12,8 +12,7 @@ namespace DP.TwinRinksHelper.Web.Controllers
 {
     [Route("[controller]/[action]")]
     public class AccountController : Controller
-    {
-     
+    {    
         public AccountController()
         {
            
