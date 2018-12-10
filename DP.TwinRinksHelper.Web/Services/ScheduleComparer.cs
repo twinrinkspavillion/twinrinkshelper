@@ -11,6 +11,7 @@ public class ScheduleComparer
     private readonly TwinRinksScheduleParserService trApi;
     private readonly long teamSnapTeamId;
     private readonly string twinRinksTeam;
+    private readonly HashSet<DateTime> exclusions;
 
     public CompareOptions Options { get; }
     public class CompareOptions
@@ -18,7 +19,7 @@ public class ScheduleComparer
 
 
     }
-    public ScheduleComparer(TeamSnapApi tsApi, TwinRinksScheduleParserService trApi, long teamSnapTeamId, string twinRinksTeam, CompareOptions options = null)
+    public ScheduleComparer(TeamSnapApi tsApi, TwinRinksScheduleParserService trApi, long teamSnapTeamId, string twinRinksTeam, HashSet<DateTime> exclusions=null, CompareOptions options = null)
     {
         if (string.IsNullOrWhiteSpace(twinRinksTeam))
         {
@@ -30,6 +31,7 @@ public class ScheduleComparer
 
         this.teamSnapTeamId = teamSnapTeamId;
         this.twinRinksTeam = twinRinksTeam;
+        this.exclusions = exclusions;
 
         Options = options ?? new CompareOptions();
     }
@@ -41,10 +43,10 @@ public class ScheduleComparer
 
             IEnumerable<TwinRinksEvent> trEvents = trApi.GetEvents(twinRinksTeam);
 
-            return Compare(tsEvents, trEvents);
+            return Compare(tsEvents, trEvents, exclusions);
         });
     }
-    public static IEnumerable<CompareResult> Compare(IEnumerable<TeamSnapApi.Event> tsEvents, IEnumerable<TwinRinksEvent> trEvents)
+    public static IEnumerable<CompareResult> Compare(IEnumerable<TeamSnapApi.Event> tsEvents, IEnumerable<TwinRinksEvent> trEvents, HashSet<DateTime> exlusions = null)
     {
         List<CompareResult> res = new List<CompareResult>();
 
@@ -52,6 +54,11 @@ public class ScheduleComparer
 
         foreach (TwinRinksEvent trEvent in trEvents)
         {
+            if (exlusions != null && exlusions.Contains(trEvent.EventDate))
+            {
+                continue;
+            }
+
             IEnumerable<TeamSnapApi.Event> tsEventsOnDay = tsEvents.Where(x => ToCSTTime(x.StartDate).Date == trEvent.EventDate.Date && x.IsCancelled == false).ToArray();
 
             seenTsEvents = new HashSet<long>(tsEventsOnDay.Select(e => e.Id));
@@ -82,7 +89,7 @@ public class ScheduleComparer
                     if (foundTsEventByEventTypeAndLocation != null)
                     {
                         //time not matched
-                        res.Add(new CompareResult() { Type = DifferenceType.WrongTimeInTeamSnap, TR_EventTime = (trEvent.EventDate + trEvent.EventStart), TR_EventType = trEvent.EventType, TR_Location = trEvent.Location, TS_EventTime = ToCSTTime(foundTsEventByEventTypeAndLocation.StartDate), TS_NumEvents = tsEventsOnDay.Count() });
+                        res.Add(new CompareResult() { Type = DifferenceType.WrongTimeInTeamSnap, TR_EventTime = (trEvent.EventDate + trEvent.EventStart), TR_EventType = trEvent.EventType, TR_Location = trEvent.Location, TS_EventTime = ToCSTTime(foundTsEventByEventTypeAndLocation.StartDate), TS_NumEvents = tsEventsOnDay.Count(), TS_EventID = foundTsEventByEventTypeAndLocation.Id });
 
                     }
                     else
@@ -102,8 +109,13 @@ public class ScheduleComparer
             }
         }
 
-        foreach (TeamSnapApi.Event tsEvent in tsEvents.Where(x => !x.IsCancelled && x.StartDate > DateTime.Today.AddDays(-1)))
+        foreach (TeamSnapApi.Event tsEvent in tsEvents.Where(x => !x.IsCancelled && ToCSTTime(x.StartDate) > ToCSTTime(DateTime.Now.Date)))
         {
+            if (exlusions != null && exlusions.Contains(ToCSTTime(tsEvent.StartDate).Date))
+            {
+                continue;
+            }
+
             if (!seenTsEvents.Contains(tsEvent.Id))
             {
                 TwinRinksEvent trEvent = trEvents.Where(x => ToCSTTime(tsEvent.StartDate).Date == x.EventDate.Date).Where(x => ToCSTTime(tsEvent.StartDate).TimeOfDay == x.EventStart).FirstOrDefault();
@@ -112,7 +124,7 @@ public class ScheduleComparer
 
                 if (trEvent == null)
                 {
-                    res.Add(new CompareResult() { Type = DifferenceType.NotOnTwinRinksWebSite, TS_EventTime = ToCSTTime(tsEvent.StartDate), TS_Location = tsEvent.LocationName, TS_EventType = tsEvent.IsGame ? TwinRinksEventType.Game : TwinRinksEventType.Practice, TR_NumEvents = cnt });
+                    res.Add(new CompareResult() { Type = DifferenceType.NotOnTwinRinksWebSite, TS_EventTime = ToCSTTime(tsEvent.StartDate), TS_Location = tsEvent.LocationName, TS_EventType = tsEvent.IsGame ? TwinRinksEventType.Game : TwinRinksEventType.Practice, TR_NumEvents = cnt, TS_EventID = tsEvent.Id });
 
                 }
             }
@@ -149,7 +161,8 @@ public class ScheduleComparer
         public DateTime? TS_EventTime { get; internal set; }
         public TwinRinksEventType? TS_EventType { get; internal set; }
         public string TS_Location { get; internal set; }
-    
+
+        public long? TS_EventID;
     }
 }
 

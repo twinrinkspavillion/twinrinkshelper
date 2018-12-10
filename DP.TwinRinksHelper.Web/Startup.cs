@@ -22,6 +22,7 @@ namespace DP.TwinRinksHelper.Web
             services.AddMemoryCache();
             services.AddTeamSnapOauth(Configuration);
             services.AddTwinRinksScheduleParser();
+            services.AddSendGrid();
             services.AddMvc();
             services.AddDbContext<TwinRinksHelperContext>(options =>options.UseSqlite("Data Source=.\\TwinRinksHelper.db"));
         }

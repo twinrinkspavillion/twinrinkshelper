@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Collections.Generic;
@@ -20,7 +21,9 @@ namespace DP.TwinRinksHelper.Web.Pages
             this.parser = parser ?? throw new System.ArgumentNullException(nameof(parser));
         }
         public IEnumerable<ScheduleComparer.CompareResult> CompareResults { get; private set; }
+        [BindProperty(SupportsGet =true)]
         public long SelectedTeamSnapTeamId { get; set; }
+        [BindProperty(SupportsGet = true)]
         public string SelectedTwinRinksTeam { get; set; }
         public IEnumerable<TeamSnapApi.Team> TeamSnapTeams => tsApi.GetActiveTeamsForUser(User.GetTeamSnapUserId()).Result;
         public IEnumerable<SelectListItem> GetTeamSnapTeamsItems()
@@ -34,15 +37,15 @@ namespace DP.TwinRinksHelper.Web.Pages
 
         public async Task OnGet()
         {
-
+            if(!string.IsNullOrWhiteSpace(SelectedTwinRinksTeam))
+            {
+                CompareResults = await new ScheduleComparer(tsApi, parser, SelectedTeamSnapTeamId, SelectedTwinRinksTeam).RunCompareAsync();
+            }
         }
 
-        public async Task OnPost(long SelectedTeamSnapTeamId, string SelectedTwinRinksTeam)
+        public async Task OnPost()
         {
-            this.SelectedTeamSnapTeamId = SelectedTeamSnapTeamId;
-
-            this.SelectedTwinRinksTeam = SelectedTwinRinksTeam;
-
+         
             CompareResults = await new ScheduleComparer(tsApi, parser, SelectedTeamSnapTeamId, SelectedTwinRinksTeam).RunCompareAsync();
 
        }

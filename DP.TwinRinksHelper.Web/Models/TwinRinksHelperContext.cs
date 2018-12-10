@@ -14,5 +14,6 @@ namespace DP.TwinRinksHelper.Web.Models
             
         }
         public DbSet<Models.ScheduleSyncSpec> ScheduleSyncSpecs { get; set; }
+        public DbSet<Models.ScheduleSyncExclusion> ScheduleSyncSpecExclusions { get; set; }
     }
 }

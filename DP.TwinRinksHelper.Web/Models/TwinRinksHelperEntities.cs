@@ -19,10 +19,17 @@ namespace DP.TwinRinksHelper.Web.Models
         public string TwinRinkTeamName { get; set; }
         public DateTime LastChecked { get; set; }
         public DateTime Expires { get; set; }
-
         public DateTime CreatedDate { get; set; }
-
         public DateTime LastUpdated { get; set; }
+
+    }
+
+
+    public class ScheduleSyncExclusion
+    {
+        public int ID { get; set; }
+        public int ScheduleSyncSpecID { get; set; }
+        public DateTime ExcludedDate { get; set; }
 
     }
 }
