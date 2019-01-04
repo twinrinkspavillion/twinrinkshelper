@@ -31,9 +31,15 @@ namespace DP.TwinRinksHelper.Web.Controllers
         [HttpGet]
         public IActionResult SignOut()
         {
-            var callbackUrl = Url.Page("/Account/SignedOut", pageHandler: null, values: null, protocol: Request.Scheme);
+
+            this.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme).Wait();
+
+            var appUrl = System.Net.WebUtility.UrlEncode($"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}");
+
+            var callbackUrl = $"https://auth.teamsnap.com/logout?redirect_uri={appUrl}";
+
             return SignOut(
-                new AuthenticationProperties { RedirectUri = callbackUrl }
+                new AuthenticationProperties {  RedirectUri = callbackUrl }
             );
         }
     }

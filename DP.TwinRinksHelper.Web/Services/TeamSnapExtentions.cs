@@ -58,7 +58,7 @@ public static class TeamSnapExtentions
                      return data[0]["value"].Value<string>();
 
                  });
-
+              
                  options.Events = new OAuthEvents
                  {
                      OnCreatingTicket = async context =>
@@ -80,7 +80,7 @@ public static class TeamSnapExtentions
 
                  };
              });
-
+      
         me.AddTransient<TeamSnapApi>(sp =>
         {
             IHttpContextAccessor ctx = sp.GetRequiredService<IHttpContextAccessor>();

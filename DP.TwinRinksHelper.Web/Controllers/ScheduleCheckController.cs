@@ -34,33 +34,27 @@ namespace DP.TwinRinksHelper.Web.Controllers
         {
             foreach (Models.ScheduleSyncSpec s in _dbContext.ScheduleSyncSpecs.ToArray())
             {
-                try
+
+                if (s.Expires < DateTime.Today)
                 {
-                    if (s.Expires < DateTime.Today)
-                    {
-                        _dbContext.Remove(s);
+                    _dbContext.Remove(s);
 
-                        continue;
-                    }
-
-                    TeamSnapApi api = new TeamSnapApi(s.TeamSnapToken);
-
-                    HashSet<DateTime> exclusions = new HashSet<DateTime>(_dbContext.ScheduleSyncSpecExclusions.Where(x=>x.ScheduleSyncSpecID == s.ID).Select(x=>x.ExcludedDate));
-
-                    IEnumerable<ScheduleComparer.CompareResult> res = await new ScheduleComparer(api, _parser, s.TeamSnapTeamId, s.TwinRinkTeamName, exclusions).RunCompareAsync();
-
-                    if (res.Any())
-                    {
-                        await BuildAndSendEmail(s, res);
-                    }
-
-                    s.LastChecked = DateTime.UtcNow;
+                    continue;
                 }
-                catch (Exception)
+
+                TeamSnapApi api = new TeamSnapApi(s.TeamSnapToken);
+
+                HashSet<DateTime> exclusions = new HashSet<DateTime>(_dbContext.ScheduleSyncSpecExclusions.Where(x => x.ScheduleSyncSpecID == s.ID).Select(x => x.ExcludedDate));
+
+                IEnumerable<ScheduleComparer.CompareResult> res = await new ScheduleComparer(api, _parser, s.TeamSnapTeamId, s.TwinRinkTeamName, exclusions).RunCompareAsync();
+
+                if (res.Any())
                 {
-
-
+                    await BuildAndSendEmail(s, res);
                 }
+
+                s.LastChecked = DateTime.UtcNow;
+
             }
 
             await _dbContext.SaveChangesAsync();
