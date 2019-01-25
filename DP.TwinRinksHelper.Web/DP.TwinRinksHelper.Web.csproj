@@ -3,10 +3,16 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <UserSecretsId>aspnet-DP.TwinRinksHelper.Web-17121E8B-D20B-4787-87F2-5F945B2CC086</UserSecretsId>
     <LangVersion>default</LangVersion>
+    <ApplicationInsightsResourceId>/subscriptions/2b0e2311-dedb-4e43-a9cb-4cbb14f20e92/resourcegroups/twinrinksYH/providers/microsoft.insights/components/twinrinksYH</ApplicationInsightsResourceId>
+    <ApplicationInsightsAnnotationResourceId>/subscriptions/2b0e2311-dedb-4e43-a9cb-4cbb14f20e92/resourcegroups/twinrinksYH/providers/microsoft.insights/components/twinrinksYH</ApplicationInsightsAnnotationResourceId>
   </PropertyGroup>
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="Connected Services\Application Insights\ConnectedService.json" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Alexa.NET" Version="1.5.7" />
     <PackageReference Include="BouncyCastle" Version="1.8.4" />
+    <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.1.1" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.7" />
     <PackageReference Include="Microsoft.AspNetCore" Version="2.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="2.2.0" />
@@ -33,5 +39,8 @@
   <ItemGroup>
     <ProjectReference Include="..\CollectionJson\CollectionJson.csproj" />
     <ProjectReference Include="..\DP.TwinRinks.YH.ScheduleParser\DP.TwinRinks.YH.ScheduleParser.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services" />
   </ItemGroup>
 </Project>

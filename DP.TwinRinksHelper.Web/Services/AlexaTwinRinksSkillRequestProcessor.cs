@@ -43,7 +43,9 @@ namespace DP.TwinRinksHelper.Web.Services
         }
         public static class Phrases
         {
-            public const string HelpString = "You can say things like: list teams!, list games for this weekend!, list events for tomorrow!, are there games this weekend?";
+            public const string HelpString = "You can ask me things like: list teams!, list games for this weekend!, list events for tomorrow!, are there games this weekend?";
+            public const string  AskSomethingElse = "Anything else?";
+            public const string WhatInfoWouldYouLike = "What would you like to ask?";
         }
 
         private readonly TwinRinksScheduleParserService parserService;
@@ -89,7 +91,7 @@ namespace DP.TwinRinksHelper.Web.Services
 
         private SkillResponse ProcessListTeamsRequest(IntentRequest request)
         {
-            return ResponseBuilder.Tell(new SsmlOutputSpeech() { Ssml = "<speak>" + GetTeamsListSsml() + "</speak>" });
+            return ResponseBuilder.Ask(new SsmlOutputSpeech() { Ssml = "<speak>" + GetTeamsListSsml() + "<break time=\"2s\"/>" + Phrases.AskSomethingElse + "</speak>" }, new Reprompt() { OutputSpeech = new PlainTextOutputSpeech() { Text = Phrases.AskSomethingElse } });
         }
 
         private SkillResponse ProcessListEventsRequest(IntentRequest request, bool listEvents = true)
@@ -105,7 +107,7 @@ namespace DP.TwinRinksHelper.Web.Services
 
             string utteredTeamName = request.Intent.Slots["teamname"].Value.ToUpperInvariant();
 
-            string resolvedTeamName = FuzzyFindTeam(parserService.GetTeamsList(), utteredTeamName).ToLowerInvariant();
+            string resolvedTeamName = FuzzyFindTeam(parserService.GetTeamsList(), utteredTeamName)?.ToLowerInvariant();
 
             if (!string.IsNullOrWhiteSpace(resolvedTeamName))
             {
@@ -135,36 +137,40 @@ namespace DP.TwinRinksHelper.Web.Services
             }
             else
             {
-                return SayTeamNotFound(resolvedTeamName);
+                return SayTeamNotFound(utteredTeamName);
 
             }
         }
 
         private SkillResponse SayTeamNotFound(string teamName)
         {
-            return ResponseBuilder.Tell(new SsmlOutputSpeech() { Ssml = $"<speak>Team {teamName} not found!<break time=\"500ms\"/>{GetTeamsListSsml()}</speak>" });
+            if (string.IsNullOrWhiteSpace(teamName))
+                teamName = "";
+
+            return ResponseBuilder.Ask(new SsmlOutputSpeech() { Ssml = $"<speak>Team {teamName} not found!<break time=\"500ms\"/>{GetTeamsListSsml()}</speak>" }, new Reprompt() { OutputSpeech = new PlainTextOutputSpeech() { Text = Phrases.AskSomethingElse } });
         }
 
         private SkillResponse BuildEventQuestionRespose(IEnumerable<TwinRinksEvent> candidateEvents, string team)
         {
             if (!candidateEvents.Any())
             {
-                return ResponseBuilder.Tell($"No. There are no requested events in time range requested for {team}");
+                return ResponseBuilder.Ask($"No. There are no requested events in time range requested for {team}", new Reprompt() { OutputSpeech = new PlainTextOutputSpeech() { Text = Phrases.AskSomethingElse } });
             }
             else
             {
-                return ResponseBuilder.Tell(new SsmlOutputSpeech() { Ssml = $"<speak>Yes. There are events in time range requested for {team}<break time=\"500ms\"/>: {BuildEventListSsmlFragment(candidateEvents)}</speak>" });
+                return ResponseBuilder.Ask(new SsmlOutputSpeech() { Ssml = $"<speak>Yes. There are events in time range requested for {team}<break time=\"500ms\"/>: {BuildEventListSsmlFragment(candidateEvents)}</speak>" }, new Reprompt() { OutputSpeech = new PlainTextOutputSpeech() { Text = Phrases.AskSomethingElse } });
             }
         }
+
         private SkillResponse BuildEventListRespose(IEnumerable<TwinRinksEvent> candidateEvents, string team)
         {
             if (!candidateEvents.Any())
             {
-                return ResponseBuilder.Tell("There are no events in time range requested for {team}.");
+                return ResponseBuilder.Ask("There are no events in time range requested for {team}.", new Reprompt() { OutputSpeech = new PlainTextOutputSpeech() { Text = Phrases.AskSomethingElse } });
             }
             else
             {
-                return ResponseBuilder.Tell(new SsmlOutputSpeech() { Ssml = $"<speak>Following are the events in time range requested for {team}<break time=\"500ms\"/>: {BuildEventListSsmlFragment(candidateEvents)}</speak>" });
+                return ResponseBuilder.Ask(new SsmlOutputSpeech() { Ssml = $"<speak>Following are the events in time range requested for {team}<break time=\"500ms\"/>: {BuildEventListSsmlFragment(candidateEvents)}</speak>" }, new Reprompt() { OutputSpeech = new PlainTextOutputSpeech() { Text = Phrases.AskSomethingElse } });
             }
         }
 
@@ -176,19 +182,19 @@ namespace DP.TwinRinksHelper.Web.Services
             {
                 string eventNameString = e.EventType == TwinRinksEventType.Game ? "game vs " + e.AwayTeamName : e.IsPowerSkatingEvent() ? "power skating" : "practice";
 
-                string dateString = e.EventDate.ToString("dddd, MMM dd") + e.EventDate.GetDaySuffix();
+                string dateString = e.EventDate.ToString("dddd, MMM d") + e.EventDate.GetDaySuffix();
                 string timeString = (e.EventDate + e.EventStart).ToString("hh:mm tt");
 
                 if (e.EventType == TwinRinksEventType.Game)
                 {
                     string awayHomeString = e.Rink == TwinRinksRink.Away ? "an away" : "a home";
-                    string locationString = e.Rink == TwinRinksRink.Away ? " at " + e.Location : " on " + e.Rink.ToString() + " Rink";
+                    string locationString = e.Rink == TwinRinksRink.Away ? " at " + e.Location : " on " + e.Rink.ToString().ToLowerInvariant() + " rink";
 
                     res.Append($"{dateString} at {timeString} <break time=\"250ms\"/> there is {awayHomeString} {eventNameString} {locationString}<break time=\"500ms\"/>");
                 }
                 else
                 {
-                    string locationString = e.Rink.ToString() + " Rink";
+                    string locationString = e.Rink.ToString().ToLowerInvariant() + " rink";
 
                     res.Append($"{dateString} at {timeString} <break time=\"250ms\"/> there is {eventNameString} on {locationString}<break time=\"500ms\"/>");
                 }
@@ -199,12 +205,12 @@ namespace DP.TwinRinksHelper.Web.Services
         }
         private SkillResponse ProcessHelpRequest(IntentRequest request, string prefix = null)
         {
-            return ResponseBuilder.Tell(prefix + Phrases.HelpString);
+            return ResponseBuilder.Ask(prefix + Phrases.HelpString + Phrases.WhatInfoWouldYouLike , new Reprompt() { OutputSpeech = new PlainTextOutputSpeech() { Text = Phrases.HelpString } });
         }
 
         private SkillResponse ProcessStartIntent()
         {
-            return ResponseBuilder.Tell("Welcome to Twin Rinks Youth Hockey! " + Phrases.HelpString);
+            return ResponseBuilder.Ask("Welcome to Twin Rinks Youth Hockey!" + Phrases.WhatInfoWouldYouLike, new Reprompt() { OutputSpeech = new PlainTextOutputSpeech() { Text = Phrases.HelpString } });
         }
 
         private SkillResponse ProcessStopIntentRequest(IntentRequest request)
@@ -244,26 +250,30 @@ namespace DP.TwinRinksHelper.Web.Services
         /// <returns></returns>
         private static string FuzzyFindTeam(List<string> allTeams, string utteredTeam)
         {
-            Dictionary<string, string> index = new Dictionary<string, string>(allTeams.Select(x =>
-             {
-                 string[] parts = x.Split(' ');
-
-                 return new KeyValuePair<string, string>((parts[0][0].ToString() + parts[1][0].ToString()).ToLowerInvariant(), x);
-
-             }));
-
-
-            string[] parts1 = utteredTeam.Split(' ');
-
-            if (parts1.Length != 2)
-                return null;
-
-            string utteredKey = (parts1[0][0].ToString() + parts1[1][0].ToString()).ToLowerInvariant();
-
-            if (index.TryGetValue(utteredKey, out string resolvedTeam))
+            try
             {
-                return resolvedTeam;
+                Dictionary<string, string> index = new Dictionary<string, string>(allTeams.Select(x =>
+                 {
+                     string[] parts = x.Split(' ');
+
+                     return new KeyValuePair<string, string>((parts[0][0].ToString() + parts[1][0].ToString()).ToLowerInvariant(), x);
+
+                 }));
+
+
+                string[] parts1 = utteredTeam.Split(' ');
+
+                if (parts1.Length != 2)
+                    return null;
+
+                string utteredKey = (parts1[0][0].ToString() + parts1[1][0].ToString()).ToLowerInvariant();
+
+                if (index.TryGetValue(utteredKey, out string resolvedTeam))
+                {
+                    return resolvedTeam;
+                }
             }
+            catch { }
 
             return null;
         }
