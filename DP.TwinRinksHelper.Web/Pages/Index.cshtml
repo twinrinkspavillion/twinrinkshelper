@@ -7,9 +7,10 @@
 
     var selectedTeam = Model.SelectedTeam == null ? "" : Model.SelectedTeam.Replace(" ", "_");
 
-    var icsUrl = System.Net.WebUtility.UrlEncode($"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}{HttpContext.Request.Path}api/ICS?team={selectedTeam}");
+    var icsUrl = ($"http://{HttpContext.Request.Host}{HttpContext.Request.Path}api/ICS?team={selectedTeam}");
 
-    var googleUrl = $"https://calendar.google.com/calendar/r?cid={icsUrl}";
+    var googleUrl = $"https://calendar.google.com/calendar/r/settings/addbyurl?cid={icsUrl}";
+
 }
 
 @section Scripts
