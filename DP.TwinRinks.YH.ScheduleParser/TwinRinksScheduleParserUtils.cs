@@ -74,7 +74,7 @@ namespace DP.TwinRinks.YH.ScheduleParser
                 whichFields.Add(TwinRinksEventField.EventType);
             }
 
-            if (!me.HomeTeamName.Equals(other.HomeTeamName))
+            if (!me.HomeTeamName.Equals(other.HomeTeamName, StringComparison.InvariantCultureIgnoreCase))
             {
                 res = true;
 
@@ -82,7 +82,7 @@ namespace DP.TwinRinks.YH.ScheduleParser
             }
 
 
-            if (!me.Location.Equals(other.Location))
+            if (!me.Location.Equals(other.Location, StringComparison.InvariantCultureIgnoreCase))
             {
                 res = true;
 

@@ -69,7 +69,7 @@ public class ScheduleComparer
 
                 if (foundTsEventByExactTime != null)
                 {
-                    if (foundTsEventByExactTime.LocationName == trEvent.Location && foundTsEventByExactTime.IsGame == (trEvent.EventType == TwinRinksEventType.Game))
+                    if (foundTsEventByExactTime.LocationName.Equals(trEvent.Location, StringComparison.InvariantCultureIgnoreCase) && foundTsEventByExactTime.IsGame == (trEvent.EventType == TwinRinksEventType.Game))
                     {
                         //matched location and event type
                     }
@@ -84,7 +84,7 @@ public class ScheduleComparer
                 }
                 else
                 {
-                    TeamSnapApi.Event foundTsEventByEventTypeAndLocation = tsEventsOnDay.Where(x => x.LocationName == trEvent.Location && x.IsGame == (trEvent.EventType == TwinRinksEventType.Game)).FirstOrDefault();
+                    TeamSnapApi.Event foundTsEventByEventTypeAndLocation = tsEventsOnDay.Where(x => x.LocationName.Equals(trEvent.Location, StringComparison.InvariantCultureIgnoreCase) && x.IsGame == (trEvent.EventType == TwinRinksEventType.Game)).FirstOrDefault();
 
                     if (foundTsEventByEventTypeAndLocation != null)
                     {
