@@ -17,5 +17,7 @@ namespace CollectionJson
 
         [DataMember(Name = "collection")]
         public Collection Collection { get; set; }
+
+      
     }
 }

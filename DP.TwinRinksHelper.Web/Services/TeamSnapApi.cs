@@ -1,5 +1,6 @@
 ﻿using CollectionJson;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,7 @@ public class TeamSnapApi : IDisposable
     private const string TeamByIdQueryTemplate = "teams/{0}";
     private const string TeamEventQueryTemplate = "events/search?team_id={0}";
     private const string TeamOwnerQueryTemplate = "/members/owner?team_id={0}";
+    private const string TeamMembersQueryTemplate = "/members/search?team_id={0}";
     private const string MeQuery = "/me";
     private const string FindTeamMemberIdByEmailTemplate = "member_email_addresses/search?email={0}&team_id={1}";
     public TeamSnapApi(string bearerToken)
@@ -61,7 +63,6 @@ public class TeamSnapApi : IDisposable
         return doc.UnpackTeams().ToList();
 
     }
-
     public async Task<Team> GetTeamAsync(long teamId)
     {
         if (teamId <= 0)
@@ -76,7 +77,6 @@ public class TeamSnapApi : IDisposable
         return doc.UnpackTeams().FirstOrDefault();
 
     }
-
     public async Task CreateEvents(IEnumerable<CreateEventRequest> cers)
     {
         CreateEventRequest first = cers.First();
@@ -173,7 +173,6 @@ public class TeamSnapApi : IDisposable
             throw new HttpRequestException(rDoc.Collection.Error.Message);
         }
     }
-
     private DateTime ConvertToUtc(DateTime startDate)
     {
         return System.TimeZoneInfo.ConvertTimeToUtc(startDate, TimeZoneInfo.FindSystemTimeZoneById("Central Standard Time"));
@@ -579,6 +578,20 @@ public class TeamSnapApi : IDisposable
         }
         return null;
     }
+
+    public async Task<IEnumerable<TeamMember>> GetTeamMembers(long teamId)
+    {
+        if (teamId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(teamId));
+        }
+
+        string str = await _httpClient.GetStringAsync(string.Format(TeamMembersQueryTemplate, teamId));
+
+        ReadDocument doc = JsonConvert.DeserializeObject<ReadDocument>(str);
+
+        return doc.UnpackTeamMembers().ToList();
+    }
     public async Task<long> CreateTeam(CreateTeamRequest team)
     {
         WriteDocument doc = new WriteDocument
@@ -631,6 +644,18 @@ public class TeamSnapApi : IDisposable
         public string InvitationMessage { get; set; }
         public bool IsNonPlayer { get; set; }
         public bool IsManager { get; set; }
+    }
+
+    public class TeamMember
+    {
+        public long MemberId { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string EmailAddress { get; set; }
+        public string PrimaryPhoneNumber { get; set; }
+        public bool IsNonPlayer { get; set; }
+        public bool IsManager { get; set; }
+        public string JerseyNumber { get; internal set; }
     }
     public class Event
     {
@@ -738,6 +763,21 @@ public static class TeamSnapApiExtentions
 
             Name = x.Data.GetDataByName("name").Value.ToString()
 
+        });
+    }
+
+    public static IEnumerable<TeamSnapApi.TeamMember> UnpackTeamMembers(this ReadDocument doc)
+    {
+        return doc.Collection.Items.Select(x => new TeamSnapApi.TeamMember
+        {
+            MemberId = long.Parse(x.Data.GetDataByName("id").Value.ToString()),
+            FirstName = x.Data.GetDataByName("first_name").Value?.ToString(),
+            LastName = x.Data.GetDataByName("last_name").Value?.ToString(),
+            EmailAddress = ((JArray)(x.Data.GetDataByName("email_addresses")?.Value))?.ToArray().FirstOrDefault()?.ToString(),
+            PrimaryPhoneNumber = ((JArray)(x.Data.GetDataByName("phone_numbers")?.Value))?.ToArray().FirstOrDefault()?.ToString(),
+            IsManager = x.Data.GetDataByName("is_manager").Value.ToObject<bool>(),
+            IsNonPlayer = x.Data.GetDataByName("is_non_player").Value.ToObject<bool>(),
+            JerseyNumber = x.Data.GetDataByName("jersey_number")?.Value?.ToObject<string>()
         });
     }
 }

@@ -10,6 +10,9 @@
     <_ContentIncludedByDefault Remove="Connected Services\Application Insights\ConnectedService.json" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Content\sharkslogo_print.gif" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Alexa.NET" Version="1.5.7" />
     <PackageReference Include="BouncyCastle" Version="1.8.4" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.1.1" />
@@ -30,6 +33,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Web.BrowserLink" Version="2.2.0" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="2.2.0" PrivateAssets="All" />
+    <PackageReference Include="PdfRpt.Core" Version="1.2.7" />
     <PackageReference Include="Sendgrid" Version="9.10.0" />
   </ItemGroup>
   <ItemGroup>
