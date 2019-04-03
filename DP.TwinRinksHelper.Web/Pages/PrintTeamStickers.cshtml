@@ -11,15 +11,15 @@
         <form method="post">
             <fieldset>
                 <div class="form-group">
-                    <label>Select Team:</label>
+                    <label>1. Select Team:</label>
                     @Html.DropDownListFor(m => m.SelectedTeamSnapTeamId, Model.GetTeamSnapTeamsItems(), new { onchange = "this.form.submit(); " })
                 </div>
                 <div class="form-group">
-                    <label>Select Coach:</label>
+                    <label>2. Select Coach:</label>
                     @Html.DropDownListFor(m => m.SelectedTeamSnapCoachId, Model.GetTeamSnapNonPlayngTeamMembers())
                 </div>
                 <div class="form-group">
-                    <label>Members:</label>
+                    <label>3. Select Players:</label>
                     @foreach (var p in Model.GetTeamSnapTeamPlayers())
                     {
                         <div class="checkbox">
@@ -31,7 +31,7 @@
                             </div>
                         }
                 </div>
-                <button type="submit" asp-page-handler="Download" class="btn btn-primary">Print</button>
+                <label>4. Click &nbsp;</label><button type="submit" asp-page-handler="Download" class="btn btn-primary">Print</button>
             </fieldset>
         </form>
     </div>

@@ -44,16 +44,18 @@
 <form asp-action="Index" method="get">
     <div class="form-actions no-color">
         <div class="container">
-            @Html.DropDownListFor(m => m.SelectedTeam, Model.Teams, new { onchange = "this.form.submit();", @class = "no-print" })
+            <div> @Html.DropDownListFor(m => m.SelectedTeam, Model.Teams, new { onchange = "this.form.submit();", @class = "no-print" })</div>
 
             @if (Model.Events != null)
             {
-                <div style="width:200px; margin-top:10px; margin-bottom:10px" class="no-print"><input type="search" class="light-table-filter form-control" data-table="event-table" placeholder="Filter"></div>
+                <div style="width:200px; margin-top:10px; margin-bottom:10px; float:left" class="no-print"><input type="search" class="light-table-filter form-control" data-table="event-table" placeholder="Filter"></div>
 
-                <a class="no-print" href="javascript:NavigateToTeamSnapExport();"><i class="fas fa-table"></i> TeamSnap File </a>
-                <a class="no-print" href="javascript:NavigateToICalExport();" style="padding-left:10px"><i class="fas fa-calendar-alt"></i> ICal File</a>
-                <a class="no-print" target="_blank" href="@googleUrl" style="padding-left:10px"><i class="fas fa-calendar-alt"></i> Add to Google Calendar</a>
-
+                <!-- <a class="no-print" href="javascript:NavigateToTeamSnapExport();"><i class="fas fa-table"></i> TeamSnap File </a>
+               <a class="no-print" href="javascript:NavigateToICalExport();" style="padding-left:10px"><i class="fas fa-calendar-alt"></i> ICal File</a>-->
+                <div style="float:right;padding-top:20px">
+                    <a class="no-print" target="_blank" href="@googleUrl"><img  src="~/images/addGoogleCalendar.png" /></a>
+                </div>
+             
                 <table class="table table-hover event-table">
                     <thead>
                         <tr>

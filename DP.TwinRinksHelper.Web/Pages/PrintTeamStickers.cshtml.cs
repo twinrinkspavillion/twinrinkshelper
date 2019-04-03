@@ -41,7 +41,7 @@ namespace DP.TwinRinksHelper.Web.Pages
             {
                 IEnumerable<TeamSnapApi.TeamMember> members = GetMembers().Where(x => !x.IsNonPlayer);
 
-                return members.Select(x => new SelectListItem() { Value = x.MemberId.ToString(), Text = $"{x.JerseyNumber} {x.FirstName} {x.LastName}" });
+                return members.OrderBy(x=>x.LastName).Select(x => new SelectListItem() { Value = x.MemberId.ToString(), Text = $"{x.JerseyNumber} {x.FirstName} {x.LastName}" });
 
             }
             return new SelectListItem[0];
@@ -79,7 +79,7 @@ namespace DP.TwinRinksHelper.Web.Pages
 
                 List<TeamStickerPrintingService.TeamStickerDescriptor.PlayerDescriptor> players = new List<TeamStickerPrintingService.TeamStickerDescriptor.PlayerDescriptor>();
 
-                foreach (TeamSnapApi.TeamMember plr in GetMembers().Where(x => members.Contains(x.MemberId)))
+                foreach (TeamSnapApi.TeamMember plr in GetMembers().Where(x => members.Contains(x.MemberId)).OrderBy(x=>x.LastName))
                 {
                     TeamStickerPrintingService.TeamStickerDescriptor.PlayerDescriptor p = new TeamStickerPrintingService.TeamStickerDescriptor.PlayerDescriptor
                     {
@@ -91,8 +91,8 @@ namespace DP.TwinRinksHelper.Web.Pages
                 }
 
                 TeamStickerPrintingService.TeamStickerDescriptor teamDescr = new TeamStickerPrintingService.TeamStickerDescriptor() { TeamName = teamname, CoachName = $"{coach?.FirstName} {coach?.LastName}", CoachPhone = $"{coach?.PrimaryPhoneNumber}", Players = players };
-
-                return File(_teamStickerService.CreateTeamLabelsPDFReport(teamDescr), "application/pdf", $"{teamDescr.TeamName} Stikers.pdf");
+                Response.Headers.Add("Content-Disposition", $"inline; filename=\"{teamDescr.TeamName} Stickers.pdf\"");
+                return File(_teamStickerService.CreateTeamLabelsPDFReport(teamDescr), "application/pdf");
 
             }
 

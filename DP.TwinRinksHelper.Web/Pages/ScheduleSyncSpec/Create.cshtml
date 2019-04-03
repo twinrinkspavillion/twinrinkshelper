@@ -1,19 +1,19 @@
 ﻿@page
 @model DP.TwinRinksHelper.Web.Pages.ScheduleSyncSpec.CreateModel
 @{
-    ViewData["Title"] = "Create Scheduled Compare";
+    ViewData["Title"] = "Create Automatic Comparison";
 }
 <div class="panel panel-default" style="margin-top:10px">
-    <div class="panel-heading">Create Scheduled Compare</div>
+    <div class="panel-heading">Create Automatic Comparison</div>
     <div class="panel-body">
         <form method="post">
             <fieldset>
                 <div class="form-group">
-                    <label>TeamSnap Team Label:</label>
+                    <label>TeamSnap Team:</label>
                     @Html.DropDownListFor(m => m.SelectedTeamSnapTeamId, Model.GetTeamSnapTeamsItems())
                 </div>
                 <div class="form-group">
-                    <label>TwinRinks Team Label:</label>
+                    <label>TwinRinks Team:</label>
                     @Html.DropDownListFor(m => m.SelectedTwinRinksTeam, Model.GetTwinRinksTeamsItems())
                 </div>
                 <div class="form-group">

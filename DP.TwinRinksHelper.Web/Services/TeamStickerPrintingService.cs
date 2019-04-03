@@ -15,13 +15,19 @@ namespace DP.TwinRinksHelper.Web.Services
     {
         public byte[] CreateTeamLabelsPDFReport(TeamStickerDescriptor descr)
         {
+
+            if (long.TryParse(descr.CoachPhone.Trim(), out long phoneLong))
+            {
+                descr.CoachPhone = string.Format("{0:(###) ###-####}", phoneLong);
+            }
+
             PdfReport pdf = new PdfReport().DocumentPreferences(doc =>
             {
                 doc.RunDirection(PdfRunDirection.LeftToRight);
                 doc.Orientation(PageOrientation.Landscape);
                 doc.PageSize(PdfPageSize.Letter);
                 doc.DocumentMetadata(new DocumentMetadata { Author = "TwinRinks", Application = "PdfRpt", Keywords = "Labels", Subject = "Labels Avery 8163", Title = $"{descr.TeamName} Stickers" });
-                doc.DocumentMargins(new DocumentMargins() { Left = 20, Top = 1 });
+                doc.DocumentMargins(new DocumentMargins() { Left = 24, Top = 1 });
 
                 doc.Compression(new CompressionSettings
                 {
@@ -96,13 +102,15 @@ namespace DP.TwinRinksHelper.Web.Services
             public PdfPCell RenderingCell(CellAttributes attributes)
             {
 
-                PdfPCell pdfCell = new PdfPCell();
+                PdfPCell pdfCell = new PdfPCell() ;
 
                 PdfGrid table = new PdfGrid(1) { RunDirection = PdfWriter.RUN_DIRECTION_LTR };
 
                 iTextSharp.text.Image photo = PdfImageHelper.GetITextSharpImageFromByteArray(SharksLogo);
 
-                table.AddCell(new PdfPCell(photo) { Padding = 0, Border = 0, VerticalAlignment = Element.ALIGN_BOTTOM });
+                photo.WidthPercentage = 60;
+
+                table.AddCell(new PdfPCell(photo, true) { Border = 0 });
 
 
                 string coachName = attributes.RowData.TableRowData[0].PropertyValue.ToSafeString();
@@ -122,8 +130,8 @@ namespace DP.TwinRinksHelper.Web.Services
                 {
                     table.AddCell(new PdfPCell(attributes.BasicProperties.PdfFont.FontSelector.Process("Head Coach")) { Border = 0 });
 
-                    table.AddCell(new PdfPCell(attributes.BasicProperties.PdfFont.FontSelector.Process(coachName)) { Border = 1 });
-                    table.AddCell(new PdfPCell(attributes.BasicProperties.PdfFont.FontSelector.Process(coachPhone)) { Border = 0 });
+                    table.AddCell(new PdfPCell(attributes.BasicProperties.PdfFont.FontSelector.Process(coachName + " " + coachPhone)) { Border = 1 });
+
                 }
 
                 pdfCell.AddElement(table);
@@ -181,7 +189,7 @@ namespace DP.TwinRinksHelper.Web.Services
                     }
                     else
                     {
-                        players.Add($"{p.PlayerNumber.ToString().PadLeft(2)} {p.PlayerName}");
+                        players.Add($"{p.PlayerNumber.ToString().PadLeft(2)} - {p.PlayerName}");
                     }
                 }
 

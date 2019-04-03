@@ -1,19 +1,19 @@
 ﻿@page
 @model DP.TwinRinksHelper.Web.Pages.CompareScheduleModel
 @{
-    ViewData["Title"] = "Schedule Compare";
+    ViewData["Title"] = "Compare/Sync Schedule";
 }
 <div class="panel panel-default" style="margin-top:10px">
-    <div class="panel-heading">Schedule Compare Sync</div>
+    <div class="panel-heading">Compare/Sync Schedule</div>
     <div class="panel-body">
         <form method="post">
             <fieldset>
                 <div class="form-group">
-                    <label>TeamSnap Team Label:</label>
+                    <label>TeamSnap Team:</label>
                     @Html.DropDownListFor(m => m.SelectedTeamSnapTeamId, Model.GetTeamSnapTeamsItems())
                 </div>
                 <div class="form-group">
-                    <label>TwinRinks Team Label:</label>
+                    <label>TwinRinks Team:</label>
                     @Html.DropDownListFor(m => m.SelectedTwinRinksTeam, Model.GetTwinRinksTeamsItems())
                 </div>
                 <button type="submit" class="btn btn-primary">Compare</button>
