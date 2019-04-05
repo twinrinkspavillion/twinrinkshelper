@@ -34,13 +34,14 @@ namespace DP.TwinRinksHelper.Web
             if (env.IsDevelopment())
             {
                 app.UseBrowserLink();
+             
                 app.UseDeveloperExceptionPage();
             }
             else
             {
                 app.UseExceptionHandler("/Error");
             }
-
+            app.UseDefaultFiles();
             app.UseStaticFiles();
 
             app.UseAuthentication();

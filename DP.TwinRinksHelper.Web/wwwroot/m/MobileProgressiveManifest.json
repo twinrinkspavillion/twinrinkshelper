@@ -1,0 +1,27 @@
+{
+  "name": "Sharks Schedule",
+  "short_name": "Sharks Schedule",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+
+  "start_url": "/m/index.html",
+  "scope": "/m",
+  "serviceworker": {
+    "src": "/m/mobileProgressiveApp-serviceWorker.js",
+    "scope": "/m",
+    "update_via_cache": "none"
+  },
+  "display": "standalone",
+  "background_color": "white",
+  "theme_color": "#2F3BA2"
+}

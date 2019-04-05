@@ -1,0 +1,69 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/m/MobileProgressiveManifest.json">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+    <title>TwinRinks Sharks Schedule</title>
+    <link type="text/css" rel="stylesheet" href="//unpkg.com/bootstrap/dist/css/bootstrap.min.css" />
+    <link type="text/css"
+          rel="stylesheet"
+          href="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.css" />
+    <link rel="stylesheet" href="/m/css/mobileProgressiveApp.css" />
+</head>
+<body>
+    <div id="app">
+        <header class="header" v-cloak>
+            <h1 class="header__title">{{selectedTeam===null?'Select Team =>' : selectedTeam}}</h1>
+            <b-form-select v-model="selectedTeam" :options="teams" size="sm" style="width: 120px;margin-right: 10px;"></b-form-select>
+            <button class="headerButton" v-on:click="onRefreshClick" aria-label="Refresh" id="butRefresh"></button>
+        </header>
+        <main class="main" v-cloak v-show="!showLoading">
+            <b-alert v-model="alert.showAlert" variant="danger" dismissible>{{alert.alertText}}</b-alert>
+            <div style="overflow-y:scroll; max-height: 100vh;">
+                <div class="card cardTemplate" v-for="ew in eventsWeeks">
+                    <div style="border-radius: 10px; background-color:#ced0ed; padding: 10px; margin:2px" v-for="e in ew.events">
+                        <div style="float: left;">
+                            <div style="font-size:1.2em;"><b>{{e.dateString}}</b></div>
+                        </div>
+                        <div style="text-align:right; font-size:1.2em;">
+                            <b>{{e.timeString}}</b>
+                        </div>
+                        <div v-if="e.isGame">
+                            <div v-show="e.isAway">
+                                <b-badge variant="danger">{{'Away ' + e.eventTypeString}}</b-badge> vs {{e.opponentName}}
+                            </div>
+                            <div v-show="!e.isAway">
+                                <b-badge variant="success">{{'Home ' + e.eventTypeString}}</b-badge> vs {{e.opponentName}}
+                            </div>
+                        </div>
+                        <div v-else>
+                            <b-badge variant="primary">{{e.eventTypeString}}</b-badge><span v-show="e.isPowerSkating"> Power Skating</span>
+                        </div>
+                        <div style="font-size:small"><b>{{e.locationString}}</b></div>
+                        <div style="font-size:0.7em;">{{e.description}}</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <div class="loader" v-show="showLoading">
+            <svg viewBox="0 0 32 32" width="32" height="32">
+                <circle id="spinner" cx="16" cy="16" r="14" fill="none"></circle>
+            </svg>
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous"></script>
+    <script src="//unpkg.com/@babel/polyfill@latest/dist/polyfill.min.js"></script>
+    <script src="//unpkg.com/vue@latest/dist/vue.min.js"></script>
+    <script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js"></script>
+    <script src="/m/mobileProgressiveApp.js"></script>
+</body>
+</html>

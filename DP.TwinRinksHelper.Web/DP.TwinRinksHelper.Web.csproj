@@ -7,6 +7,9 @@
     <ApplicationInsightsAnnotationResourceId>/subscriptions/2b0e2311-dedb-4e43-a9cb-4cbb14f20e92/resourcegroups/twinrinksYH/providers/microsoft.insights/components/twinrinksYH</ApplicationInsightsAnnotationResourceId>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Pages\MobileProgressive.html" />
+  </ItemGroup>
+  <ItemGroup>
     <_ContentIncludedByDefault Remove="Connected Services\Application Insights\ConnectedService.json" />
   </ItemGroup>
   <ItemGroup>
@@ -46,5 +49,8 @@
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Connected Services" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="wwwroot\m\js\" />
   </ItemGroup>
 </Project>
