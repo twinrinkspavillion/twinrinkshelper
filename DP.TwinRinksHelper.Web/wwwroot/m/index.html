@@ -16,23 +16,27 @@
           rel="stylesheet"
           href="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.css" />
     <link rel="stylesheet" href="/m/css/mobileProgressiveApp.css" />
+    <link rel="stylesheet" href="/m/css/iphone-overlay.css" />
 </head>
 <body>
-    <div id="app">
+    <div id="app" class="app">
         <header class="header" v-cloak>
             <h1 class="header__title">{{selectedTeam===null?'Select Team =>' : selectedTeam}}</h1>
-            <b-form-select v-model="selectedTeam" :options="teams" size="sm" style="width: 120px;margin-right: 10px;"></b-form-select>
             <button class="headerButton" v-on:click="onRefreshClick" aria-label="Refresh" id="butRefresh"></button>
+            <b-dropdown text="" size="sm" style="height:30px">
+                <b-dd-header>Teams</b-dd-header>
+                <b-dropdown-item-button v-on:click="onSelectTeam(t)" v-for="t in teams">{{t}}</b-dropdown-item-button>
+            </b-dropdown>
         </header>
         <main class="main" v-cloak v-show="!showLoading">
             <b-alert v-model="alert.showAlert" variant="danger" dismissible>{{alert.alertText}}</b-alert>
-            <div style="overflow-y:scroll; max-height: 100vh;">
+            <div id="cardContainer" style="overflow-y:scroll; max-height: 100vh;">
                 <div class="card cardTemplate" v-for="ew in eventsWeeks">
-                    <div style="border-radius: 10px; background-color:#ced0ed; padding: 10px; margin:2px" v-for="e in ew.events">
+                    <div class="eventrow" v-for="e in ew.events" v-bind:class="{ game: e.isGame, practice: !e.isGame }">
                         <div style="float: left;">
                             <div style="font-size:1.2em;"><b>{{e.dateString}}</b></div>
                         </div>
-                        <div style="text-align:right; font-size:1.2em;">
+                        <div style="text-align:right; font-size:1.3em;">
                             <b>{{e.timeString}}</b>
                         </div>
                         <div v-if="e.isGame">
@@ -64,6 +68,14 @@
     <script src="//unpkg.com/@babel/polyfill@latest/dist/polyfill.min.js"></script>
     <script src="//unpkg.com/vue@latest/dist/vue.min.js"></script>
     <script src="//unpkg.com/bootstrap-vue@latest/dist/bootstrap-vue.min.js"></script>
+    <script src="//unpkg.com/pulltorefreshjs/dist/pulltorefresh.js"></script>
+    <script src="/m/js/iphone-overlay.js"></script>
     <script src="/m/mobileProgressiveApp.js"></script>
+    <script type="text/javascript">
+        window.onload = function () {
+            iPhoneInstallOverlay.init({ blurElement: '.app', appIconURL: '/images/sharkslogo-small.gif', spritesURL: '/images/mobile-sprite.png', showOnReload: false, appName: 'Sharks Schedule' });
+          
+        }
+    </script>
 </body>
 </html>

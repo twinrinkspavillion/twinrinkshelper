@@ -25,6 +25,14 @@ var app = new Vue({
     },
     created: function () {
         let v = this;
+        const ptr = PullToRefresh.init({
+            mainElement: 'main',
+            distReload: 200,
+            distIgnore :200,
+            onRefresh() {
+                v.onRefreshClick();
+            }
+        });
 
         v.showLoading = true;
 
@@ -91,14 +99,14 @@ var app = new Vue({
 
                 }
             });
+        },
+        onSelectTeam: function (team) {
+            this.selectedTeam = team;
         }
-
     },
     watch: {
         selectedTeam: function (team) {
-
             localStorage.setItem('selected-team', team);
-
             this.loadSchedule(team);
         }
     }
