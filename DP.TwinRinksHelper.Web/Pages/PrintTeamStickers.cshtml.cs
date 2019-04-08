@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
 namespace DP.TwinRinksHelper.Web.Pages
@@ -21,7 +22,9 @@ namespace DP.TwinRinksHelper.Web.Pages
 
         [BindProperty(SupportsGet = true)]
         public long? SelectedTeamSnapTeamId { get; set; }
-
+        [DataType(DataType.MultilineText)]
+        [BindProperty(SupportsGet = true)]
+        public string AdditionalPlayers { get; set; }
         [BindProperty(SupportsGet = true)]
         public long? SelectedTeamSnapCoachId { get; set; }
 
@@ -41,7 +44,7 @@ namespace DP.TwinRinksHelper.Web.Pages
             {
                 IEnumerable<TeamSnapApi.TeamMember> members = GetMembers().Where(x => !x.IsNonPlayer);
 
-                return members.OrderBy(x=>x.LastName).Select(x => new SelectListItem() { Value = x.MemberId.ToString(), Text = $"{x.JerseyNumber} {x.FirstName} {x.LastName}" });
+                return members.OrderBy(x => x.LastName).Select(x => new SelectListItem() { Value = x.MemberId.ToString(), Text = $"{x.JerseyNumber} {x.FirstName} {x.LastName}" });
 
             }
             return new SelectListItem[0];
@@ -79,7 +82,7 @@ namespace DP.TwinRinksHelper.Web.Pages
 
                 List<TeamStickerPrintingService.TeamStickerDescriptor.PlayerDescriptor> players = new List<TeamStickerPrintingService.TeamStickerDescriptor.PlayerDescriptor>();
 
-                foreach (TeamSnapApi.TeamMember plr in GetMembers().Where(x => members.Contains(x.MemberId)).OrderBy(x=>x.LastName))
+                foreach (TeamSnapApi.TeamMember plr in GetMembers().Where(x => members.Contains(x.MemberId)).OrderBy(x => x.LastName))
                 {
                     TeamStickerPrintingService.TeamStickerDescriptor.PlayerDescriptor p = new TeamStickerPrintingService.TeamStickerDescriptor.PlayerDescriptor
                     {
@@ -90,6 +93,8 @@ namespace DP.TwinRinksHelper.Web.Pages
                     players.Add(p);
                 }
 
+              ParseAdditionalPlayers(players);
+
                 TeamStickerPrintingService.TeamStickerDescriptor teamDescr = new TeamStickerPrintingService.TeamStickerDescriptor() { TeamName = teamname, CoachName = $"{coach?.FirstName} {coach?.LastName}", CoachPhone = $"{coach?.PrimaryPhoneNumber}", Players = players };
                 Response.Headers.Add("Content-Disposition", $"inline; filename=\"{teamDescr.TeamName} Stickers.pdf\"");
                 return File(_teamStickerService.CreateTeamLabelsPDFReport(teamDescr), "application/pdf");
@@ -98,6 +103,46 @@ namespace DP.TwinRinksHelper.Web.Pages
 
             return new PageResult();
         }
+
+        private void ParseAdditionalPlayers(List<TeamStickerPrintingService.TeamStickerDescriptor.PlayerDescriptor> players)
+        {
+            if (!string.IsNullOrWhiteSpace(AdditionalPlayers))
+            {
+                string[] lines = AdditionalPlayers.Split("\r\n");
+
+                foreach (string l in lines)
+                {
+                    string[] parts = l.Split(' ');
+
+
+                    if (parts.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    if (parts.Length == 3)
+                    {
+                        TeamStickerPrintingService.TeamStickerDescriptor.PlayerDescriptor p = new TeamStickerPrintingService.TeamStickerDescriptor.PlayerDescriptor
+                        {
+                            PlayerName = $"{parts[1]} {parts[2]}",
+                            PlayerNumber = parts[0]
+                        };
+
+                        players.Add(p);
+                    }
+                    else
+                    {
+                        TeamStickerPrintingService.TeamStickerDescriptor.PlayerDescriptor p = new TeamStickerPrintingService.TeamStickerDescriptor.PlayerDescriptor
+                        {
+                            PlayerName = $"{parts[0]} {parts[1]}",
+                        };
+
+                        players.Add(p);
+                    }
+                }
+            }
+        }
+
         public void OnPost()
         {
             EnsureDefaultTeamSelection();
