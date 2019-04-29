@@ -211,7 +211,7 @@ namespace DP.TwinRinksHelper.Web.Services
 
 public static class TeamStickerPrintingServiceExtentions
 {
-    public static IServiceCollection AddSendGrid(this IServiceCollection me)
+    public static IServiceCollection AddPrintStickers(this IServiceCollection me)
     {
         me.AddSingleton<TeamStickerPrintingService>();
 

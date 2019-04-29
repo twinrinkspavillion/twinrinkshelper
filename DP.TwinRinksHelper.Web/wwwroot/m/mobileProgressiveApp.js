@@ -47,6 +47,10 @@ var app = new Vue({
                 if (localStorage.getItem('selected-team')) {
                     v.selectedTeam = localStorage.getItem('selected-team');
                 }
+                else {
+
+                    v.$refs.ddownTeamSelect.show();
+                }
 
             },
             error: function (xhr, ajaxOptions, thrownError) {

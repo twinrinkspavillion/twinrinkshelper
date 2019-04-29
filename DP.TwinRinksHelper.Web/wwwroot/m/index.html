@@ -23,7 +23,7 @@
         <header class="header" v-cloak>
             <h1 class="header__title">{{selectedTeam===null?'Select Team =>' : selectedTeam}}</h1>
             <button class="headerButton" v-on:click="onRefreshClick" aria-label="Refresh" id="butRefresh"></button>
-            <b-dropdown text="" size="sm" style="height:30px">
+            <b-dropdown text="" size="sm" style="height:30px" ref="ddownTeamSelect">
                 <b-dd-header>Teams</b-dd-header>
                 <b-dropdown-item-button v-on:click="onSelectTeam(t)" v-for="t in teams">{{t}}</b-dropdown-item-button>
             </b-dropdown>

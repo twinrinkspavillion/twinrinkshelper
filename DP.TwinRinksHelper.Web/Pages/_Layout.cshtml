@@ -60,11 +60,30 @@
                                     <li>
                                         <a href="~/PrintTeamStickers" title="Creates PDF to print team stickers using Avery 8163 labels">Print Team Stickers</a>
                                     </li>
-                                   
+
                                 </ul>
                             </div>
                         </li>
                     }
+                </ul>
+                <ul class="nav navbar-nav">
+                  
+                        <li class="nav-item dropdown">
+                            <div lass="dropdown">
+                                <a class="btn nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="margin-top:10px">
+                                    <i class="fas fa-question-circle"></i> Help
+                                </a>
+                                <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                                    <li>
+                                        <a href="~/CompareSchedule" title="">For Parents</a>
+                                    </li>
+                                    <li>
+                                        <a href="~/ScheduleSyncSpec/Create">For Coaches/Team Managers</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                    
                 </ul>
                 @await Html.PartialAsync("_LoginPartial")
             </div>
