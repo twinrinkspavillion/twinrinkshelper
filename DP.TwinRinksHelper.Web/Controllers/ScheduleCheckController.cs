@@ -68,7 +68,7 @@ namespace DP.TwinRinksHelper.Web.Controllers
 
             string subject = $"[{s.TeamSnapTeamName}] {res.Count()} Schedule differences found vs [{s.TwinRinkTeamName}]@TwinRinks.com";
 
-            EmailAddress to = new EmailAddress(s.Recipients); //TODO: split by comma
+            EmailAddress to = new EmailAddress(s.Recipients);
 
             StringBuilder mailBuider = new StringBuilder();
 
@@ -76,7 +76,7 @@ namespace DP.TwinRinksHelper.Web.Controllers
 
             mailBuider.Append($"<p><a href='{host}/CompareSchedule?SelectedTeamSnapTeamId={s.TeamSnapTeamId}&SelectedTwinRinksTeam={s.TwinRinkTeamName}'>Go to Site </a></p>");
 
-            mailBuider.Append(HtmlHelperExtentions.ToHtmlTable(null, res, "id", border: 0, actionGenerator: (t) => $"<a href='{host + "/ScheduleSyncSpec/CreateExclusion?Date=" + t.TR_EventTime.Value.ToShortDateString() ?? ScheduleComparer.ToCSTTime(t.TS_EventTime.Value).ToShortDateString()}&SpecID={s.ID}'>Mute</a>"));
+            mailBuider.Append(HtmlHelperExtentions.ToHtmlTable(null, res, "id", border: 0, actionGenerator: (t) => $"<a href='{host + "/ScheduleSyncSpec/CreateExclusion?Date=" + (t.TR_EventTime.HasValue ? t.TR_EventTime.Value.ToShortDateString() : ScheduleComparer.ToCSTTime(t.TS_EventTime.Value).ToShortDateString())}&SpecID={s.ID}'>Mute</a>"));
 
             string htmlContent = mailBuider.ToString();
 

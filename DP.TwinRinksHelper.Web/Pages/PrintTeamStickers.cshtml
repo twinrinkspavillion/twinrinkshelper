@@ -35,7 +35,7 @@
                     <label>4. Additional Player (one per line):</label>
                     @Html.EditorFor(m => m.AdditionalPlayers, additionalViewData: new { htmlAttributes = new { @class = "form-control" } })
                 </div>
-                    <label>5. Click &nbsp;</label><button type="submit" asp-page-handler="Download" class="btn btn-primary">Print</button>
+                    <label>5. Click &nbsp;</label><button type="submit" asp-page-handler="Download" class="btn btn-primary" onclick="return TrySubmitForPrint()">Print</button>
             </fieldset>
         </form>
     </div>

@@ -120,7 +120,7 @@ namespace DP.TwinRinksHelper.Web.Services
 
                 foreach (string p in players)
                 {
-                    table.AddCell(new PdfPCell(attributes.BasicProperties.PdfFont.FontSelector.Process(p)) { Border = 0 });
+                    table.AddCell(new PdfPCell(attributes.BasicProperties.PdfFont.FontSelector.Process(p)) { Border = 0, Padding = 0 });
                 }
 
                 table.AddCell(new PdfPCell(attributes.BasicProperties.PdfFont.FontSelector.Process("")) { Border = 0 });

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Westwind.AspNetCore.Markdown;
 
 namespace DP.TwinRinksHelper.Web
 {
@@ -19,6 +20,7 @@ namespace DP.TwinRinksHelper.Web
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddMarkdown();
             services.AddMemoryCache();
             services.AddTeamSnapOauth(Configuration);
             services.AddTwinRinksScheduleParser();
@@ -46,7 +48,7 @@ namespace DP.TwinRinksHelper.Web
             app.UseStaticFiles();
 
             app.UseAuthentication();
-
+            app.UseMarkdown();
             app.UseMvc();
         }
     }
