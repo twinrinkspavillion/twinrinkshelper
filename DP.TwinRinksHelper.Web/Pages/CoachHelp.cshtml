@@ -1,0 +1,8 @@
+﻿@page
+@using Westwind.AspNetCore.Markdown
+@{
+
+    ViewBag.Title = "Coach Help";
+}
+
+@Html.Raw(@Markdown.ParseFromUrl("https://raw.githubusercontent.com/twinrinkspavillion/twinrinkshelper/master/docs/TeamManager.md"))
