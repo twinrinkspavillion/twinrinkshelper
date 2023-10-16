@@ -124,13 +124,33 @@ namespace DP.TwinRinks.YH.ScheduleParser
                 EventType = ParseEventType(item),
                 EventDescription = item.Description,
                 EventDate = DateTime.Parse(item.Date),
-                EventEnd = DateTime.Parse(item.End + "M").TimeOfDay,
+           
                 EventStart = DateTime.Parse(item.Start + "M").TimeOfDay
             };
+
+
+            tre.EventEnd = ParseEndDate(tre.EventStart, item.End);
 
             return tre;
 
 
+        }
+
+        public static TimeSpan ParseEndDate(TimeSpan start, string endStr)
+        {
+            var parts = endStr.Split(' ');
+
+            if (parts.Length == 2)
+            {
+                int.TryParse(parts[0], out int minutes);
+
+                if(minutes==0)
+                    minutes = 60;
+
+                return start + new TimeSpan(0, minutes, 0);
+            }
+            else
+                return start + new TimeSpan(0, 60, 0);
         }
 
         public static IEnumerable<TwinRinksEvent> FilterTeamEvents(this IEnumerable<TwinRinksEvent> me, TwinRinksTeamLevel level, object teamDesignator)
