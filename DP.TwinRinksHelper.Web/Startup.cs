@@ -1,6 +1,7 @@
 using DP.TwinRinksHelper.Web.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -22,12 +23,11 @@ namespace DP.TwinRinksHelper.Web
         {
             services.AddMarkdown();
             services.AddMemoryCache();
-            services.AddTeamSnapOauth(Configuration);
+
             services.AddTwinRinksScheduleParser();
             services.AddSendGrid();
-            services.AddPrintStickers();
-            services.AddAlexaSkills();
-            services.AddMvc();
+      
+            services.AddMvc(options => options.EnableEndpointRouting = false);
             services.AddDbContext<TwinRinksHelperContext>(options =>options.UseSqlite("Data Source=.\\TwinRinksHelper.db"));
         }
 
