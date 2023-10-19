@@ -193,7 +193,7 @@ namespace DP.TwinRinks.YH.ScheduleParser
                     {
                         yield return e;
                     }
-                    else if (isPowerSkate && (e.HomeTeamName.ToUpperInvariant().Contains(levelStr) || e.AwayTeamName.ToUpperInvariant().Contains(levelStr)))
+                    else if (isPowerSkate && (e.HomeTeamName.ToUpperInvariant().Contains(levelStr) || e.AwayTeamName.ToUpperInvariant().Contains(levelStr) || (string.IsNullOrWhiteSpace(e.AwayTeamName) && string.IsNullOrWhiteSpace(e.HomeTeamName))))
                     {
                         yield return e;
                     }
@@ -375,7 +375,8 @@ namespace DP.TwinRinks.YH.ScheduleParser
 
         public static bool IsPowerSkatingEvent(this TwinRinksEvent evt)
         {
-            return evt.HomeTeamName.EndsWith(" POW") || evt.HomeTeamName.EndsWith(" P") || evt.HomeTeamName.EndsWith(" POWER") ||
+            return evt.EventDescription.Contains("Hockey Clinics") || evt.HomeTeamName.EndsWith(" POW") || evt.HomeTeamName.EndsWith(" P") || evt.HomeTeamName.EndsWith(" POWER") ||
+
                evt.AwayTeamName.EndsWith(" POW") || evt.AwayTeamName.EndsWith(" P") || evt.AwayTeamName.EndsWith(" POWER");
 
         }
